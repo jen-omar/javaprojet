@@ -112,12 +112,18 @@ public class WalletController {
         }
 
         try {
+            int userId = ValidationUtils.requirePositiveInt(currentUser.id(), "user id");
+            double balance = ValidationUtils.requireNonNegativeAmount(balanceField.getText(), "solde");
+            String status = ValidationUtils.requireStatus(statusField.getText());
+            String currency = ValidationUtils.requireCurrency(currencyField.getText());
+            double ceiling = ValidationUtils.requireNonNegativeAmount(ceilingField.getText(), "plafond");
+            ValidationUtils.validateWalletAmounts(balance, ceiling);
             walletRepository.create(
-                    Integer.parseInt(currentUser.id()),
-                    parseAmount(balanceField.getText(), "solde"),
-                    statusField.getText(),
-                    currencyField.getText(),
-                    parseAmount(ceilingField.getText(), "plafond")
+                    userId,
+                    balance,
+                    status,
+                    currency,
+                    ceiling
             ).orElseThrow();
 
             refreshWallets();
@@ -143,13 +149,19 @@ public class WalletController {
         }
 
         try {
+            int userId = ValidationUtils.requirePositiveInt(currentUser.id(), "user id");
+            double balance = ValidationUtils.requireNonNegativeAmount(balanceField.getText(), "solde");
+            String status = ValidationUtils.requireStatus(statusField.getText());
+            String currency = ValidationUtils.requireCurrency(currencyField.getText());
+            double ceiling = ValidationUtils.requireNonNegativeAmount(ceilingField.getText(), "plafond");
+            ValidationUtils.validateWalletAmounts(balance, ceiling);
             walletRepository.update(
                     selectedWallet.id(),
-                    Integer.parseInt(currentUser.id()),
-                    parseAmount(balanceField.getText(), "solde"),
-                    statusField.getText(),
-                    currencyField.getText(),
-                    parseAmount(ceilingField.getText(), "plafond")
+                    userId,
+                    balance,
+                    status,
+                    currency,
+                    ceiling
             ).orElseThrow();
 
             refreshWallets();
@@ -403,17 +415,6 @@ public class WalletController {
         }
 
         return true;
-    }
-
-    private double parseAmount(String value, String fieldName) {
-        try {
-            String normalizedValue = value == null || value.isBlank()
-                    ? "0"
-                    : value.trim().replace(',', '.');
-            return Double.parseDouble(normalizedValue);
-        } catch (NumberFormatException ex) {
-            throw new IllegalArgumentException("Invalid " + fieldName + " value.");
-        }
     }
 
     private void clearForm() {

@@ -76,6 +76,18 @@ public class LoginController {
             return;
         }
 
+        try {
+            ValidationUtils.requireUsername(username);
+        } catch (IllegalArgumentException ignored) {
+            // Login also accepts email, so only validate as username when possible.
+            try {
+                ValidationUtils.requireEmail(username);
+            } catch (IllegalArgumentException ex) {
+                setFeedback("Identifiant invalide. Utilise un username ou un email valide.", true);
+                return;
+            }
+        }
+
         Optional<User> user = userRepository.authenticate(username, password);
         if (user.isPresent()) {
             setFeedback("", false);
@@ -114,12 +126,12 @@ public class LoginController {
             return;
         }
 
-        if (password.length() < 6) {
-            setFeedback("Le mot de passe doit contenir au moins 6 caracteres.", true);
-            return;
-        }
-
         try {
+            ValidationUtils.requireUsername(username);
+            ValidationUtils.requireEmail(email);
+            ValidationUtils.optionalName(firstName, "Prenom");
+            ValidationUtils.optionalName(lastName, "Nom");
+            ValidationUtils.requireStrongPassword(password);
             User createdUser = userRepository.registerUser(username, email, password, firstName, lastName);
             setFeedback("Compte cree avec succes. Connexion en cours...", false);
             onLoginSuccess.accept(createdUser);

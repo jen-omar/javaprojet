@@ -80,6 +80,10 @@ public class ProfileController {
         }
 
         try {
+            ValidationUtils.requireEmail(emailField.getText());
+            ValidationUtils.optionalName(firstNameField.getText(), "Prenom");
+            ValidationUtils.optionalName(lastNameField.getText(), "Nom");
+            ValidationUtils.optionalPhone(phoneField.getText());
             User updated = userRepository.updateProfile(
                     currentUser,
                     emailField.getText(),
@@ -93,6 +97,8 @@ public class ProfileController {
             if (onUserUpdated != null) {
                 onUserUpdated.accept(updated);
             }
+        } catch (IllegalArgumentException ex) {
+            showMessage(ex.getMessage(), true);
         } catch (Exception ex) {
             showMessage("Impossible d'enregistrer le profil.", true);
         }

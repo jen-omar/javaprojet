@@ -1,5 +1,6 @@
 package com.example.mythoriadesktop.data;
 
+import com.example.mythoriadesktop.ValidationUtils;
 import com.example.mythoriadesktop.model.Wallet;
 
 import java.sql.Connection;
@@ -71,17 +72,21 @@ public final class WalletRepository {
     }
 
     public Optional<Wallet> create(int userId, double balance, String status, String currency, double ceiling) {
+        ValidationUtils.validateWalletAmounts(balance, ceiling);
         String sql = """
                 INSERT INTO portefeuille (user_id, solde, statut, devise, plafond, updated_at)
                 VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
                 """;
 
+        String validatedStatus = ValidationUtils.requireStatus(status);
+        String validatedCurrency = ValidationUtils.requireCurrency(currency);
+
         try (Connection connection = databaseConnection.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             statement.setInt(1, userId);
             statement.setDouble(2, balance);
-            statement.setString(3, normalizeText(status));
-            statement.setString(4, normalizeText(currency).toUpperCase());
+            statement.setString(3, validatedStatus);
+            statement.setString(4, validatedCurrency);
             statement.setDouble(5, ceiling);
             statement.executeUpdate();
 
@@ -104,18 +109,22 @@ public final class WalletRepository {
     }
 
     public Optional<Wallet> update(int walletId, int userId, double balance, String status, String currency, double ceiling) {
+        ValidationUtils.validateWalletAmounts(balance, ceiling);
         String sql = """
                 UPDATE portefeuille
                 SET user_id = ?, solde = ?, statut = ?, devise = ?, plafond = ?, updated_at = CURRENT_TIMESTAMP
                 WHERE id = ?
                 """;
 
+        String validatedStatus = ValidationUtils.requireStatus(status);
+        String validatedCurrency = ValidationUtils.requireCurrency(currency);
+
         try (Connection connection = databaseConnection.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, userId);
             statement.setDouble(2, balance);
-            statement.setString(3, normalizeText(status));
-            statement.setString(4, normalizeText(currency).toUpperCase());
+            statement.setString(3, validatedStatus);
+            statement.setString(4, validatedCurrency);
             statement.setDouble(5, ceiling);
             statement.setInt(6, walletId);
             int updatedRows = statement.executeUpdate();
@@ -190,14 +199,17 @@ public final class WalletRepository {
                 VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
                 """;
 
+        String validatedStatus = ValidationUtils.requireStatus(status);
+        String validatedCurrency = ValidationUtils.requireCurrency(currency);
+
         try (Connection connection = databaseConnection.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             int nextId = nextWalletId(connection);
             statement.setInt(1, nextId);
             statement.setInt(2, userId);
             statement.setDouble(3, balance);
-            statement.setString(4, normalizeText(status));
-            statement.setString(5, normalizeText(currency).toUpperCase());
+            statement.setString(4, validatedStatus);
+            statement.setString(5, validatedCurrency);
             statement.setDouble(6, ceiling);
             statement.executeUpdate();
             return findById(nextId);

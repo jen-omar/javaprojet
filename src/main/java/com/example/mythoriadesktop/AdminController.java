@@ -102,14 +102,20 @@ public class AdminController {
         }
 
         try {
+            String email = ValidationUtils.requireEmail(adminUserEmailField.getText());
+            String firstName = ValidationUtils.optionalName(adminUserFirstNameField.getText(), "Prenom");
+            String lastName = ValidationUtils.optionalName(adminUserLastNameField.getText(), "Nom");
+            String phone = ValidationUtils.optionalPhone(adminUserPhoneField.getText());
+            int score = ValidationUtils.requireNonNegativeInt(adminUserScoreField.getText(), "score");
+            String role = ValidationUtils.requireRole(adminUserRoleField.getText());
             userRepository.adminUpdateUser(
                     selected.id(),
-                    adminUserEmailField.getText(),
-                    adminUserFirstNameField.getText(),
-                    adminUserLastNameField.getText(),
-                    adminUserPhoneField.getText(),
-                    parseInteger(adminUserScoreField.getText(), "score"),
-                    adminUserRoleField.getText()
+                    email,
+                    firstName,
+                    lastName,
+                    phone,
+                    score,
+                    role
             ).orElseThrow();
             refreshUsers();
             showMessage("User modifie.", false);
@@ -147,13 +153,19 @@ public class AdminController {
         }
 
         try {
+            int userId = ValidationUtils.requirePositiveInt(adminWalletUserIdField.getText(), "user id");
+            double balance = ValidationUtils.requireNonNegativeAmount(adminWalletBalanceField.getText(), "solde");
+            String status = ValidationUtils.requireStatus(adminWalletStatusField.getText());
+            String currency = ValidationUtils.requireCurrency(adminWalletCurrencyField.getText());
+            double ceiling = ValidationUtils.requireNonNegativeAmount(adminWalletCeilingField.getText(), "plafond");
+            ValidationUtils.validateWalletAmounts(balance, ceiling);
             walletRepository.update(
                     selected.id(),
-                    parseInteger(adminWalletUserIdField.getText(), "user id"),
-                    parseAmount(adminWalletBalanceField.getText(), "solde"),
-                    adminWalletStatusField.getText(),
-                    adminWalletCurrencyField.getText(),
-                    parseAmount(adminWalletCeilingField.getText(), "plafond")
+                    userId,
+                    balance,
+                    status,
+                    currency,
+                    ceiling
             ).orElseThrow();
             refreshWallets();
             showMessage("Wallet modifie.", false);
@@ -404,23 +416,6 @@ public class AdminController {
         }
         adminHeadline.setText("Admin Console");
         adminSummary.setText("Connected as @" + currentUser.username() + " (" + currentUser.role() + ")");
-    }
-
-    private int parseInteger(String value, String field) {
-        try {
-            return Integer.parseInt((value == null || value.isBlank()) ? "0" : value.trim());
-        } catch (NumberFormatException ex) {
-            throw new IllegalArgumentException("Valeur invalide pour " + field + ".");
-        }
-    }
-
-    private double parseAmount(String value, String field) {
-        try {
-            String normalized = (value == null || value.isBlank()) ? "0" : value.trim().replace(',', '.');
-            return Double.parseDouble(normalized);
-        } catch (NumberFormatException ex) {
-            throw new IllegalArgumentException("Valeur invalide pour " + field + ".");
-        }
     }
 
     private void showMessage(String message, boolean error) {

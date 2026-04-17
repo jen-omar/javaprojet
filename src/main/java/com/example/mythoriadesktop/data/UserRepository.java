@@ -1,5 +1,6 @@
 package com.example.mythoriadesktop.data;
 
+import com.example.mythoriadesktop.ValidationUtils;
 import com.example.mythoriadesktop.model.User;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -108,12 +109,11 @@ public final class UserRepository {
     }
 
     private Optional<User> registerUserInDatabase(String username, String email, String rawPassword, String firstName, String lastName) {
-        String normalizedUsername = normalize(username);
-        String normalizedEmail = normalizeEmail(email);
-
-        if (normalizedUsername.isBlank() || normalizedEmail.isBlank() || rawPassword == null || rawPassword.isBlank()) {
-            throw new IllegalArgumentException("Username, email and password are required.");
-        }
+        String normalizedUsername = ValidationUtils.requireUsername(username);
+        String normalizedEmail = ValidationUtils.requireEmail(email);
+        String validatedPassword = ValidationUtils.requireStrongPassword(rawPassword);
+        String normalizedFirstName = ValidationUtils.optionalName(firstName, "Prenom");
+        String normalizedLastName = ValidationUtils.optionalName(lastName, "Nom");
 
         try (Connection connection = databaseConnection.getConnection()) {
             if (databaseUserExists(connection, normalizedUsername, normalizedEmail)) {
@@ -131,9 +131,9 @@ public final class UserRepository {
                 statement.setString(2, normalizedEmail);
                 statement.setString(3, normalizedUsername);
                 statement.setString(4, "[\"ROLE_USER\"]");
-                statement.setString(5, BCrypt.hashpw(rawPassword, BCrypt.gensalt()));
-                statement.setString(6, normalizeProfileValue(firstName));
-                statement.setString(7, normalizeProfileValue(lastName));
+                statement.setString(5, BCrypt.hashpw(validatedPassword, BCrypt.gensalt()));
+                statement.setString(6, normalizedFirstName);
+                statement.setString(7, normalizedLastName);
                 statement.executeUpdate();
             }
 
@@ -147,12 +147,11 @@ public final class UserRepository {
     }
 
     private User registerUserInLocalStorage(String username, String email, String rawPassword, String firstName, String lastName) {
-        String normalizedUsername = normalize(username);
-        String normalizedEmail = normalizeEmail(email);
-
-        if (normalizedUsername.isBlank() || normalizedEmail.isBlank() || rawPassword == null || rawPassword.isBlank()) {
-            throw new IllegalArgumentException("Username, email and password are required.");
-        }
+        String normalizedUsername = ValidationUtils.requireUsername(username);
+        String normalizedEmail = ValidationUtils.requireEmail(email);
+        String validatedPassword = ValidationUtils.requireStrongPassword(rawPassword);
+        String normalizedFirstName = ValidationUtils.optionalName(firstName, "Prenom");
+        String normalizedLastName = ValidationUtils.optionalName(lastName, "Nom");
 
         boolean exists = users.stream().anyMatch(user ->
                 user.username().equals(normalizedUsername) || user.email().equalsIgnoreCase(normalizedEmail));
@@ -160,7 +159,7 @@ public final class UserRepository {
             throw new IllegalArgumentException("Username or email already exists.");
         }
 
-        String displayName = (normalizeProfileValue(firstName) + " " + normalizeProfileValue(lastName)).trim();
+        String displayName = (normalizedFirstName + " " + normalizedLastName).trim();
         if (displayName.isBlank()) {
             displayName = normalizedUsername;
         }
@@ -169,12 +168,12 @@ public final class UserRepository {
                 java.util.UUID.randomUUID().toString(),
                 normalizedUsername,
                 displayName,
-                BCrypt.hashpw(rawPassword, BCrypt.gensalt()),
+                BCrypt.hashpw(validatedPassword, BCrypt.gensalt()),
                 "Neophyte",
                 0,
                 normalizedEmail,
-                normalizeProfileValue(firstName),
-                normalizeProfileValue(lastName),
+                normalizedFirstName,
+                normalizedLastName,
                 "",
                 "user",
                 false
@@ -220,10 +219,10 @@ public final class UserRepository {
 
         try (Connection connection = databaseConnection.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setString(1, normalizeEmail(email));
-            statement.setString(2, normalizeProfileValue(firstName));
-            statement.setString(3, normalizeProfileValue(lastName));
-            statement.setString(4, normalizeProfileValue(phoneNumber));
+            statement.setString(1, ValidationUtils.requireEmail(email));
+            statement.setString(2, ValidationUtils.optionalName(firstName, "Prenom"));
+            statement.setString(3, ValidationUtils.optionalName(lastName, "Nom"));
+            statement.setString(4, ValidationUtils.optionalPhone(phoneNumber));
             statement.setInt(5, Integer.parseInt(currentUser.id()));
             statement.executeUpdate();
 
@@ -386,8 +385,10 @@ public final class UserRepository {
     }
 
     private static User mergeProfile(User user, String email, String firstName, String lastName, String phoneNumber, boolean databaseBacked) {
-        String normalizedFirstName = normalizeProfileValue(firstName);
-        String normalizedLastName = normalizeProfileValue(lastName);
+        String normalizedEmail = ValidationUtils.requireEmail(email);
+        String normalizedFirstName = ValidationUtils.optionalName(firstName, "Prenom");
+        String normalizedLastName = ValidationUtils.optionalName(lastName, "Nom");
+        String normalizedPhone = ValidationUtils.optionalPhone(phoneNumber);
         String displayName = (normalizedFirstName + " " + normalizedLastName).trim();
         if (displayName.isBlank()) {
             displayName = user.displayName();
@@ -400,10 +401,10 @@ public final class UserRepository {
                 user.passwordHash(),
                 user.rank(),
                 user.points(),
-                normalizeEmail(email),
+                normalizedEmail,
                 normalizedFirstName,
                 normalizedLastName,
-                normalizeProfileValue(phoneNumber),
+                normalizedPhone,
                 user.role(),
                 databaseBacked
         );
@@ -438,12 +439,12 @@ public final class UserRepository {
 
         try (Connection connection = databaseConnection.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setString(1, normalizeEmail(email));
-            statement.setString(2, normalizeProfileValue(firstName));
-            statement.setString(3, normalizeProfileValue(lastName));
-            statement.setString(4, normalizeProfileValue(phoneNumber));
+            statement.setString(1, ValidationUtils.requireEmail(email));
+            statement.setString(2, ValidationUtils.optionalName(firstName, "Prenom"));
+            statement.setString(3, ValidationUtils.optionalName(lastName, "Nom"));
+            statement.setString(4, ValidationUtils.optionalPhone(phoneNumber));
             statement.setInt(5, score);
-            statement.setString(6, toDatabaseRoles(role));
+            statement.setString(6, toDatabaseRoles(ValidationUtils.requireRole(role)));
             statement.setInt(7, Integer.parseInt(userId));
             int updatedRows = statement.executeUpdate();
             if (updatedRows > 0) {
