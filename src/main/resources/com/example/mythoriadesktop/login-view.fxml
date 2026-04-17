@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<StackPane xmlns:fx="http://javafx.com/fxml" fx:controller="com.example.mythoriadesktop.LoginController" styleClass="login-root">
+    <VBox alignment="CENTER_LEFT" maxWidth="460" spacing="16" styleClass="login-card">
+        <Label text="MYTHORIA" styleClass="login-brand" />
+
+        <HBox spacing="10">
+            <Button text="Login" onAction="#onShowLogin" styleClass="login-button" />
+            <Button text="Sign Up" onAction="#onShowSignup" />
+        </HBox>
+
+        <Label fx:id="authTitleLabel" text="Connexion a Mythoria" styleClass="login-title" wrapText="true" />
+        <Label fx:id="authSubtitleLabel" text="Entre avec ton username ou ton email pour acceder a ton profil, ton wallet et tes outils." styleClass="login-subtitle" wrapText="true" />
+
+        <VBox fx:id="loginPane" spacing="16">
+            <VBox spacing="8">
+                <Label text="Identifiant" styleClass="login-field-label" />
+                <TextField fx:id="usernameField" promptText="Username ou email" />
+            </VBox>
+
+            <VBox spacing="8">
+                <Label text="Mot de passe" styleClass="login-field-label" />
+                <PasswordField fx:id="passwordField" promptText="Mot de passe" onAction="#onLogin" />
+            </VBox>
+
+            <Button text="Se connecter" onAction="#onLogin" maxWidth="1.7976931348623157E308" styleClass="login-button" />
+        </VBox>
+
+        <VBox fx:id="signupPane" spacing="16" visible="false" managed="false">
+            <VBox spacing="8">
+                <Label text="Username" styleClass="login-field-label" />
+                <TextField fx:id="signupUsernameField" promptText="username" />
+            </VBox>
+
+            <VBox spacing="8">
+                <Label text="Email" styleClass="login-field-label" />
+                <TextField fx:id="signupEmailField" promptText="email@example.com" />
+            </VBox>
+
+            <VBox spacing="8">
+                <Label text="Prenom" styleClass="login-field-label" />
+                <TextField fx:id="signupFirstNameField" promptText="Prenom" />
+            </VBox>
+
+            <VBox spacing="8">
+                <Label text="Nom" styleClass="login-field-label" />
+                <TextField fx:id="signupLastNameField" promptText="Nom" />
+            </VBox>
+
+            <VBox spacing="8">
+                <Label text="Mot de passe" styleClass="login-field-label" />
+                <PasswordField fx:id="signupPasswordField" promptText="Mot de passe" />
+            </VBox>
+
+            <VBox spacing="8">
+                <Label text="Confirmer le mot de passe" styleClass="login-field-label" />
+                <PasswordField fx:id="signupConfirmPasswordField" promptText="Confirmer le mot de passe" onAction="#onSignup" />
+            </VBox>
+
+            <Button text="Creer le compte" onAction="#onSignup" maxWidth="1.7976931348623157E308" styleClass="login-button" />
+        </VBox>
+
+        <Label fx:id="feedbackLabel" text="" wrapText="true" />
+        <Label text="Connexion MySQL locale par defaut: mythoria sur localhost:3306 avec root. Utilise MYTHORIA_DB_URL, MYTHORIA_DB_USER, MYTHORIA_DB_PASSWORD ou MYTHORIA_DB_NAME pour surcharger." styleClass="login-hint" wrapText="true" />
+
+        <padding>
+            <Insets top="28" right="28" bottom="28" left="28" />
+        </padding>
+    </VBox>
+</StackPane>
