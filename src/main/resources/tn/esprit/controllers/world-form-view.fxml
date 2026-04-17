@@ -10,7 +10,7 @@
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox xmlns:fx="http://javafx.com/fxml" fx:controller="com.example.mythoriadesktop.FormController" styleClass="form-panel" maxWidth="720">
+<VBox xmlns:fx="http://javafx.com/fxml" fx:controller="tn.esprit.controllers.FormController" styleClass="form-panel" maxWidth="720">
     <Label fx:id="formTitle" text="Créer un Monde" styleClass="form-title" />
 
     <VBox spacing="8">
@@ -39,4 +39,3 @@
         <Insets top="18" right="18" bottom="18" left="18" />
     </padding>
 </VBox>
-

@@ -1,6 +1,6 @@
-package com.example.mythoriadesktop.data;
+package tn.esprit.data;
 
-import com.example.mythoriadesktop.model.World;
+import tn.esprit.Models.World;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
@@ -101,11 +101,11 @@ public final class WorldRepository {
         }
     }
 
-    public void addBookToWorld(UUID worldId, com.example.mythoriadesktop.model.Book book) {
+    public void addBookToWorld(UUID worldId, tn.esprit.Models.Book book) {
         int idx = indexOf(worldId);
         if (idx >= 0) {
             World w = worlds.get(idx);
-            List<com.example.mythoriadesktop.model.Book> newBooks = new ArrayList<>(w.books());
+            List<tn.esprit.Models.Book> newBooks = new ArrayList<>(w.books());
             newBooks.add(book);
             World updated = w.withBooks(newBooks);
             worlds.set(idx, updated);

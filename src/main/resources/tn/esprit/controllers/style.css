@@ -1,17 +1,19 @@
 .root {
     -mythoria-bg: #0f0f0f;
-    -mythoria-gold: #d4af37;
+    -mythoria-silver: #c0c0c0;
     -mythoria-card: #1e1e1e;
+    -mythoria-gold: #c5a54e;
+    -mythoria-bone: #dfd7cf;
 
     -text-primary: #f5f5f5;
     -text-muted: #cfcfcf;
     -text-faint: #9a9a9a;
 
-    -border-gold: rgba(212, 175, 55, 0.55);
+    -border-silver: rgba(192, 192, 192, 0.55);
     -border-soft: rgba(255, 255, 255, 0.12);
     -shadow-1: dropshadow(three-pass-box, rgba(0, 0, 0, 0.65), 18, 0.0, 0, 10);
     -shadow-2: dropshadow(three-pass-box, rgba(0, 0, 0, 0.80), 26, 0.0, 0, 16);
-    -glow-gold: dropshadow(three-pass-box, rgba(212, 175, 55, 0.35), 22, 0.0, 0, 0);
+    -glow-silver: dropshadow(three-pass-box, rgba(192, 192, 192, 0.35), 22, 0.0, 0, 0);
 
     -fx-background-color: -mythoria-bg;
     -fx-font-family: "System";
@@ -28,14 +30,14 @@
 
 .profile-bar {
     -fx-background-color: rgba(0, 0, 0, 0.55);
-    -fx-border-color: -border-gold;
+    -fx-border-color: -border-silver;
     -fx-border-width: 0 0 1 0;
     -fx-padding: 16 24;
     -fx-alignment: center-left;
 }
 
 .rank-label {
-    -fx-text-fill: -mythoria-gold;
+    -fx-text-fill: -mythoria-silver;
     -fx-font-size: 14px;
     -fx-font-weight: 700;
     -fx-letter-spacing: 0.08em;
@@ -52,13 +54,13 @@
 }
 
 .pc-value {
-    -fx-text-fill: -mythoria-gold;
+    -fx-text-fill: -mythoria-silver;
     -fx-font-size: 14px;
     -fx-font-weight: 700;
 }
 
 .pc-progress {
-    -fx-accent: -mythoria-gold;
+    -fx-accent: -mythoria-silver;
 }
 
 .pc-progress .track {
@@ -67,7 +69,7 @@
 }
 
 .pc-progress .bar {
-    -fx-background-color: -mythoria-gold;
+    -fx-background-color: -mythoria-silver;
     -fx-background-insets: 0;
     -fx-background-radius: 999;
 }
@@ -88,7 +90,7 @@
     -fx-background-color: transparent;
 }
 
-.archives-scroll > .viewport {
+.archives-scroll>.viewport {
     -fx-background-color: transparent;
 }
 
@@ -116,10 +118,26 @@
     -fx-background-color: transparent;
 }
 
+.card-container {
+    -fx-background-color: rgba(30, 30, 30, 0.85);
+    -fx-background-radius: 16;
+    -fx-border-color: rgba(192, 192, 192, 0.35);
+    -fx-border-radius: 16;
+    -fx-border-width: 1;
+    -fx-padding: 15;
+    -fx-spacing: 12;
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.6), 10, 0.0, 0, 5);
+}
+
+.card-container:hover {
+    -fx-border-color: -mythoria-silver;
+    -fx-background-color: rgba(40, 40, 40, 0.95);
+}
+
 .book-card {
     -fx-background-color: -mythoria-card;
     -fx-background-radius: 16;
-    -fx-border-color: rgba(212, 175, 55, 0.30);
+    -fx-border-color: rgba(192, 192, 192, 0.30);
     -fx-border-radius: 16;
     -fx-border-width: 1;
     -fx-padding: 14;
@@ -128,8 +146,8 @@
 }
 
 .book-card:hover {
-    -fx-border-color: -mythoria-gold;
-    -fx-effect: -shadow-2, -glow-gold;
+    -fx-border-color: -mythoria-silver;
+    -fx-effect: -shadow-2, -glow-silver;
 }
 
 .cover-box {
@@ -178,37 +196,37 @@
 }
 
 .status-in-progress {
-    -fx-text-fill: -mythoria-gold;
-    -fx-background-color: rgba(212, 175, 55, 0.10);
-    -fx-border-color: rgba(212, 175, 55, 0.35);
+    -fx-text-fill: -mythoria-silver;
+    -fx-background-color: rgba(192, 192, 192, 0.10);
+    -fx-border-color: rgba(192, 192, 192, 0.35);
 }
 
 .status-done {
     -fx-text-fill: -text-primary;
-    -fx-background-color: rgba(212, 175, 55, 0.20);
-    -fx-border-color: -mythoria-gold;
+    -fx-background-color: rgba(192, 192, 192, 0.20);
+    -fx-border-color: -mythoria-silver;
 }
 
 .button {
     -fx-background-color: transparent;
     -fx-text-fill: -text-primary;
-    -fx-border-color: rgba(212, 175, 55, 0.40);
+    -fx-border-color: rgba(192, 192, 192, 0.40);
     -fx-border-radius: 10;
     -fx-background-radius: 10;
     -fx-padding: 10 14;
 }
 
 .button:hover {
-    -fx-background-color: rgba(212, 175, 55, 0.10);
-    -fx-border-color: -mythoria-gold;
+    -fx-background-color: rgba(192, 192, 192, 0.10);
+    -fx-border-color: -mythoria-silver;
 }
 
 .button:pressed {
-    -fx-background-color: rgba(212, 175, 55, 0.18);
+    -fx-background-color: rgba(192, 192, 192, 0.18);
 }
 
 .logo {
-    -fx-text-fill: -mythoria-gold;
+    -fx-text-fill: -mythoria-silver;
     -fx-font-size: 16px;
     -fx-font-weight: 800;
     -fx-letter-spacing: 0.12em;
@@ -216,23 +234,23 @@
 
 .rank-pill,
 .pc-pill {
-    -fx-background-color: rgba(212, 175, 55, 0.12);
-    -fx-border-color: rgba(212, 175, 55, 0.45);
+    -fx-background-color: rgba(192, 192, 192, 0.12);
+    -fx-border-color: rgba(192, 192, 192, 0.45);
     -fx-border-radius: 999;
     -fx-background-radius: 999;
     -fx-padding: 6 12;
 }
 
 .pill-text {
-    -fx-text-fill: -mythoria-gold;
+    -fx-text-fill: -mythoria-silver;
     -fx-font-size: 12px;
     -fx-font-weight: 700;
 }
 
 .create-button {
-    -fx-background-color: rgba(212, 175, 55, 0.16);
-    -fx-text-fill: -mythoria-gold;
-    -fx-border-color: -mythoria-gold;
+    -fx-background-color: rgba(192, 192, 192, 0.16);
+    -fx-text-fill: -mythoria-silver;
+    -fx-border-color: -mythoria-silver;
     -fx-border-radius: 999;
     -fx-background-radius: 999;
     -fx-font-size: 22px;
@@ -242,12 +260,12 @@
 }
 
 .create-button:hover {
-    -fx-background-color: rgba(212, 175, 55, 0.24);
-    -fx-effect: -shadow-2, -glow-gold;
+    -fx-background-color: rgba(192, 192, 192, 0.24);
+    -fx-effect: -shadow-2, -glow-silver;
 }
 
 .create-button:pressed {
-    -fx-background-color: rgba(212, 175, 55, 0.32);
+    -fx-background-color: rgba(192, 192, 192, 0.32);
 }
 
 .world-grid {
@@ -260,7 +278,7 @@
 .world-card {
     -fx-background-color: -mythoria-card;
     -fx-background-radius: 16;
-    -fx-border-color: rgba(212, 175, 55, 0.30);
+    -fx-border-color: rgba(192, 192, 192, 0.30);
     -fx-border-radius: 16;
     -fx-border-width: 1;
     -fx-padding: 14;
@@ -269,8 +287,8 @@
 }
 
 .world-card:hover {
-    -fx-border-color: -mythoria-gold;
-    -fx-effect: -shadow-2, -glow-gold;
+    -fx-border-color: -mythoria-silver;
+    -fx-effect: -shadow-2, -glow-silver;
 }
 
 .world-title {
@@ -287,7 +305,7 @@
 .form-panel {
     -fx-background-color: -mythoria-card;
     -fx-background-radius: 16;
-    -fx-border-color: rgba(212, 175, 55, 0.40);
+    -fx-border-color: rgba(192, 192, 192, 0.40);
     -fx-border-radius: 16;
     -fx-border-width: 1;
     -fx-padding: 18;
@@ -303,9 +321,9 @@
 
 .text-field,
 .text-area {
-    -fx-background-color: rgba(255, 255, 255, 0.06);
-    -fx-text-fill: -text-primary;
-    -fx-prompt-text-fill: rgba(245, 245, 245, 0.45);
+    -fx-background-color: rgba(255, 255, 255, 0.95);
+    -fx-text-fill: black;
+    -fx-prompt-text-fill: rgba(0, 0, 0, 0.45);
     -fx-background-radius: 10;
     -fx-border-radius: 10;
     -fx-border-color: rgba(255, 255, 255, 0.10);
@@ -313,7 +331,16 @@
 
 .text-field:focused,
 .text-area:focused {
-    -fx-border-color: rgba(212, 175, 55, 0.70);
+    -fx-border-color: rgba(192, 192, 192, 0.70);
+}
+
+.scroll-pane {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+.scroll-pane>.viewport {
+    -fx-background-color: transparent;
 }
 
 .scroll-bar {
@@ -326,12 +353,12 @@
 }
 
 .scroll-bar .thumb {
-    -fx-background-color: rgba(212, 175, 55, 0.55);
+    -fx-background-color: rgba(192, 192, 192, 0.55);
     -fx-background-radius: 999;
 }
 
 .scroll-bar .thumb:hover {
-    -fx-background-color: rgba(212, 175, 55, 0.75);
+    -fx-background-color: rgba(192, 192, 192, 0.75);
 }
 
 .scroll-bar .increment-button,
@@ -348,7 +375,7 @@
 
 .sidebar {
     -fx-background-color: #1a1a1a;
-    -fx-border-color: transparent #d4af37 transparent transparent;
+    -fx-border-color: transparent #c0c0c0 transparent transparent;
     -fx-border-width: 0 2 0 0;
 }
 
@@ -357,7 +384,7 @@
 }
 
 .sidebar-logo {
-    -fx-text-fill: -mythoria-gold;
+    -fx-text-fill: -mythoria-silver;
     -fx-font-size: 16px;
     -fx-font-weight: 900;
     -fx-letter-spacing: 0.18em;
@@ -394,31 +421,31 @@
 }
 
 .nav-button:hover {
-    -fx-border-color: -mythoria-gold;
-    -fx-background-color: rgba(212, 175, 55, 0.08);
+    -fx-border-color: -mythoria-silver;
+    -fx-background-color: rgba(192, 192, 192, 0.08);
 }
 
 .nav-button:hover .text {
-    -fx-fill: -mythoria-gold;
+    -fx-fill: -mythoria-silver;
 }
 
 .nav-button:hover .nav-icon {
-    -fx-text-fill: -mythoria-gold;
+    -fx-text-fill: -mythoria-silver;
 }
 
 .nav-button.nav-active {
-    -fx-border-color: -mythoria-gold;
-    -fx-background-color: rgba(212, 175, 55, 0.12);
+    -fx-border-color: -mythoria-silver;
+    -fx-background-color: rgba(192, 192, 192, 0.12);
 }
 
 .nav-button.nav-active .text,
 .nav-button.nav-active .nav-icon {
-    -fx-fill: -mythoria-gold;
-    -fx-text-fill: -mythoria-gold;
+    -fx-fill: -mythoria-silver;
+    -fx-text-fill: -mythoria-silver;
 }
 
 .sidebar-footer {
-    -fx-border-color: #d4af37;
+    -fx-border-color: #c0c0c0;
     -fx-border-width: 2;
     -fx-border-radius: 12;
     -fx-background-radius: 12;
@@ -426,7 +453,7 @@
 }
 
 .footer-text {
-    -fx-text-fill: -mythoria-gold;
+    -fx-text-fill: -mythoria-silver;
     -fx-font-weight: 800;
     -fx-letter-spacing: 0.10em;
 }

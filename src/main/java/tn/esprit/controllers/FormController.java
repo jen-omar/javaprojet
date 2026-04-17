@@ -1,7 +1,7 @@
-package com.example.mythoriadesktop;
+package tn.esprit.controllers;
 
-import com.example.mythoriadesktop.data.WorldRepository;
-import com.example.mythoriadesktop.model.World;
+import tn.esprit.data.WorldRepository;
+import tn.esprit.Models.World;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -114,4 +114,3 @@ public class FormController {
         }
     }
 }
-

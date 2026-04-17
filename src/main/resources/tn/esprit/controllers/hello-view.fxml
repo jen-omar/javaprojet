@@ -12,55 +12,66 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="com.example.mythoriadesktop.GrandArchivesController" styleClass="app-root">
+<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="tn.esprit.controllers.GrandArchivesController" styleClass="app-root">
     <left>
         <VBox prefWidth="250" minWidth="250" maxWidth="250" BorderPane.alignment="CENTER" styleClass="sidebar">
             <HBox spacing="10" alignment="CENTER_LEFT" styleClass="sidebar-brand">
                 <Label text="MYTHORIA" styleClass="sidebar-logo" />
             </HBox>
 
-            <VBox spacing="6" styleClass="sidebar-nav">
-                <Button text="HOME" onAction="#onNavigate" userData="HOME" styleClass="nav-button" maxWidth="1.7976931348623157E308">
+            <VBox fx:id="sidebarNav" spacing="6" styleClass="sidebar-nav">
+                <Button text="HOME" onAction="#onNavigate" userData="HOME" styleClass="nav-button" maxWidth="Infinity">
                     <graphic>
                         <Label text="⌂" styleClass="nav-icon" />
                     </graphic>
                 </Button>
-                <Button fx:id="navArchives" text="GRAND ARCHIVES" onAction="#onNavigate" userData="ARCHIVES" styleClass="nav-button" maxWidth="1.7976931348623157E308">
+                <Button fx:id="navArchives" text="GRAND ARCHIVES" onAction="#onNavigate" userData="ARCHIVES" styleClass="nav-button" maxWidth="Infinity">
                     <graphic>
                         <Label text="▦" styleClass="nav-icon" />
                     </graphic>
                 </Button>
-                <Button text="FELLOWSHIP" onAction="#onNavigate" userData="FELLOWSHIP" styleClass="nav-button" maxWidth="1.7976931348623157E308">
+                <Button fx:id="navFellowship" text="FELLOWSHIP" onAction="#onNavigate" userData="FELLOWSHIP" styleClass="nav-button" maxWidth="Infinity">
                     <graphic>
                         <Label text="☉" styleClass="nav-icon" />
                     </graphic>
                 </Button>
-                <Button text="VENUES" onAction="#onNavigate" userData="VENUES" styleClass="nav-button" maxWidth="1.7976931348623157E308">
+                <Button fx:id="navVenues" text="VENUES" onAction="#onNavigate" userData="VENUES" styleClass="nav-button" maxWidth="Infinity">
                     <graphic>
                         <Label text="⌬" styleClass="nav-icon" />
                     </graphic>
                 </Button>
-                <Button text="HAPPENINGS" onAction="#onNavigate" userData="HAPPENINGS" styleClass="nav-button" maxWidth="1.7976931348623157E308">
+                <Button fx:id="navHappenings" text="HAPPENINGS" onAction="#onNavigate" userData="HAPPENINGS" styleClass="nav-button" maxWidth="Infinity">
                     <graphic>
                         <Label text="✦" styleClass="nav-icon" />
                     </graphic>
                 </Button>
-                <Button text="KINSHIP" onAction="#onNavigate" userData="KINSHIP" styleClass="nav-button" maxWidth="1.7976931348623157E308">
+                <Button fx:id="navKinship" text="KINSHIP" onAction="#onNavigate" userData="KINSHIP" styleClass="nav-button" maxWidth="Infinity">
                     <graphic>
                         <Label text="⛉" styleClass="nav-icon" />
                     </graphic>
                 </Button>
-                <Button text="THE BAZAAR" onAction="#onNavigate" userData="BAZAAR" styleClass="nav-button" maxWidth="1.7976931348623157E308">
+                <Button fx:id="navBazaar" text="THE BAZAAR" onAction="#onNavigate" userData="BAZAAR" styleClass="nav-button" maxWidth="Infinity">
                     <graphic>
                         <Label text="⟠" styleClass="nav-icon" />
                     </graphic>
                 </Button>
-                <Button text="PROFILE" onAction="#onNavigate" userData="PROFILE" styleClass="nav-button" maxWidth="1.7976931348623157E308">
+                <Button fx:id="navUsers" text="USER MANAGEMENT" onAction="#onNavigate" userData="USERS" styleClass="nav-button" maxWidth="Infinity">
                     <graphic>
                         <Label text="⧉" styleClass="nav-icon" />
                     </graphic>
                 </Button>
+                <Button fx:id="navProfile" text="PROFILE" onAction="#onNavigate" userData="PROFILE" styleClass="nav-button" maxWidth="Infinity">
+                    <graphic>
+                        <Label text="⧉" styleClass="nav-icon" />
+                    </graphic>
+                </Button>
+                <Button fx:id="navLogout" text="LOGOUT" onAction="#onNavigate" userData="LOGOUT" styleClass="nav-button" style="-fx-text-fill: #ff4c4c;" maxWidth="Infinity">
+                    <graphic>
+                        <Label text="✕" styleClass="nav-icon" />
+                    </graphic>
+                </Button>
             </VBox>
+
 
             <Region VBox.vgrow="ALWAYS" />
 

@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.text.Text?>
+<?import javafx.collections.FXCollections?>
+<?import java.lang.String?>
+
+<StackPane stylesheets="@style.css" style="-fx-background-image: url('TheLore/TheLoreBackground.jpg'); -fx-background-size: cover; -fx-background-position: center;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tn.esprit.controllers.KinshipController">
+
+    <VBox spacing="0" style="-fx-background-color: transparent;">
+        <!-- PERSISTENT TOP SECTION -->
+        <StackPane>
+            <VBox fx:id="mainDashboardHeader" spacing="10">
+                <HBox spacing="15" alignment="CENTER_LEFT" styleClass="profile-bar" style="-fx-padding: 10 20;">
+                    <Label text="Mythoria Kinship" styleClass="form-title" style="-fx-font-family: 'Cinzel', serif; -fx-font-size: 24;"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Button text="⟳ Refresh Dashboard" onAction="#onRefresh" styleClass="button"/>
+                    <Button text="Download Report (PDF)" onAction="#onGenerateReport" styleClass="button"/>
+                    <Button fx:id="btnPostRequest" text="Post Request" onAction="#onOpenPostModal" styleClass="create-button"/>
+                </HBox>
+            </VBox>
+
+            <VBox fx:id="briefDetailHeader" spacing="10" styleClass="profile-bar" style="-fx-padding: 15 25;" visible="false" managed="false">
+                <HBox spacing="15" alignment="CENTER_LEFT">
+                    <Button text="← Back to Dashboard" onAction="#onCloseProposals" styleClass="nav-button"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Label fx:id="detailBriefTitle" text="Quest Title" styleClass="form-title" style="-fx-font-family: 'Cinzel', serif; -fx-font-size: 24;"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Button text="Download Brief Report" onAction="#onGenerateReport" styleClass="button"/>
+                </HBox>
+                <HBox spacing="20" alignment="CENTER">
+                    <Label fx:id="detailBriefAuthor" text="Posted by: ..." style="-fx-text-fill: -mythoria-gold; -fx-font-weight: bold;"/>
+                    <Label fx:id="detailBriefBudget" text="Budget: ..." style="-fx-text-fill: -mythoria-bone;"/>
+                    <Label fx:id="detailBriefDeadline" text="Deadline: ..." style="-fx-text-fill: -mythoria-silver;"/>
+                    <Label fx:id="detailBriefStatus" text="OPEN" styleClass="pill-text"/>
+                </HBox>
+            </VBox>
+        </StackPane>
+
+        <!-- PERSISTENT TOOL BAR -->
+        <HBox fx:id="persistentToolBar" spacing="15" alignment="CENTER_LEFT" style="-fx-padding: 10 20;">
+            <TextField fx:id="searchField" promptText="Search Quests, Artists, or Proposals..." prefWidth="350" styleClass="text-field"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Label text="Sort By:" style="-fx-text-fill: -mythoria-bone;"/>
+            <ComboBox fx:id="sortCombo" prefWidth="150" styleClass="combo-box">
+                <items>
+                    <FXCollections fx:factory="observableArrayList">
+                        <String fx:value="Newest First"/>
+                        <String fx:value="Budget (High to Low)"/>
+                        <String fx:value="Budget (Low to High)"/>
+                        <String fx:value="Deadline (Urgent)"/>
+                    </FXCollections>
+                </items>
+            </ComboBox>
+        </HBox>
+
+        <StackPane VBox.vgrow="ALWAYS">
+            <ScrollPane fx:id="mainDashboardContent" fitToWidth="true" style="-fx-background-color: transparent; -fx-background: transparent; -fx-padding: 10;">
+                <VBox spacing="20" style="-fx-background-color: transparent;">
+                    <Label text="Active Quests" styleClass="section-title" style="-fx-font-family: 'Cinzel', serif;"/>
+                    <FlowPane fx:id="briefCardsContainer" hgap="20" vgap="20" style="-fx-background-color: transparent;"/>
+                </VBox>
+            </ScrollPane>
+
+            <ScrollPane fx:id="briefDetailContent" visible="false" managed="false" fitToWidth="true" style="-fx-background-color: transparent; -fx-background: transparent; -fx-padding: 20;">
+                <VBox spacing="25" style="-fx-background-color: transparent;">
+                    <VBox spacing="10" styleClass="card-container" style="-fx-background-color: rgba(0,0,0,0.5);">
+                        <Label text="Quest Description" style="-fx-text-fill: -mythoria-gold; -fx-font-weight: bold;"/>
+                        <Text fx:id="detailBriefDesc" wrappingWidth="800" style="-fx-fill: white; -fx-font-size: 13;"/>
+                    </VBox>
+                    <Separator prefWidth="200" style="-fx-opacity: 0.2;"/>
+                    <VBox spacing="15">
+                        <HBox alignment="CENTER_LEFT" spacing="15">
+                            <Label text="Received Proposals" styleClass="section-title" style="-fx-font-family: 'Cinzel', serif;"/>
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <Button fx:id="btnForgeProposalDetail" text="➕ Forge Your Proposal" onAction="#onForgeProposalInDetail" styleClass="create-button" visible="false"/>
+                        </HBox>
+                        <FlowPane fx:id="proposalCardsContainer" hgap="20" vgap="20" style="-fx-background-color: transparent;"/>
+                    </VBox>
+                </VBox>
+            </ScrollPane>
+        </StackPane>
+    </VBox>
+
+    <!-- MODAL OVERLAY: Brief Form -->
+    <StackPane fx:id="briefModalOverlay" visible="false" style="-fx-background-color: rgba(0, 0, 0, 0.7);">
+        <VBox spacing="15" styleClass="form-container" maxWidth="450" maxHeight="450" alignment="CENTER">
+            <HBox alignment="CENTER_RIGHT">
+                <Button text="✕" onAction="#onCloseModal" styleClass="nav-button" style="-fx-text-fill: #ff4c4c;"/>
+            </HBox>
+            <Label text="Forge a Quest" styleClass="form-title" style="-fx-font-family: 'Cinzel', serif;"/>
+            <TextField fx:id="titleField" promptText="Quest Title" styleClass="text-field"/>
+            <TextArea fx:id="descArea" promptText="Detail the terms of this kinship..." styleClass="text-field" prefRowCount="4"/>
+            <TextField fx:id="budgetField" promptText="Maximum Bounty (Gold)" styleClass="text-field"/>
+            <DatePicker fx:id="deadlinePicker" promptText="Deadline Limit" styleClass="text-field" maxWidth="Infinity"/>
+            <HBox spacing="10" alignment="CENTER_RIGHT">
+                <Button fx:id="btnSaveBrief" text="Seal Pact" onAction="#onSaveBrief" styleClass="create-button"/>
+            </HBox>
+        </VBox>
+    </StackPane>
+
+    <!-- MODAL OVERLAY: Proposal Form -->
+    <StackPane fx:id="proposalModalOverlay" visible="false" style="-fx-background-color: rgba(0, 0, 0, 0.7);">
+        <VBox spacing="15" styleClass="form-container" maxWidth="450" maxHeight="350" alignment="CENTER">
+            <HBox alignment="CENTER_RIGHT">
+                <Button text="✕" onAction="#onCloseModal" styleClass="nav-button" style="-fx-text-fill: #ff4c4c;"/>
+            </HBox>
+            <Label text="Offer Your Service" styleClass="form-title" style="-fx-font-family: 'Cinzel', serif;"/>
+            <TextField fx:id="priceField" promptText="Requested Price (Gold)" styleClass="text-field"/>
+            <TextField fx:id="daysField" promptText="Days to Complete" styleClass="text-field"/>
+            <TextArea fx:id="coverArea" promptText="Why should you be chosen..." styleClass="text-field" prefRowCount="4"/>
+            <HBox spacing="10" alignment="CENTER_RIGHT">
+                <Button fx:id="btnSaveProp" text="Send Raven" onAction="#onSaveProposal" styleClass="create-button"/>
+            </HBox>
+        </VBox>
+    </StackPane>
+
+</StackPane>

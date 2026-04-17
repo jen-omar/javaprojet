@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Text?>
+<StackPane xmlns:fx="http://javafx.com/fxml" fx:controller="tn.esprit.controllers.LoginController" styleClass="app-root" prefWidth="1200" prefHeight="800">
+    <VBox alignment="CENTER" spacing="20" maxWidth="400" maxHeight="500" styleClass="form-panel, login-panel">
+        
+        <!-- HEADER -->
+        <Label text="Realm of Mythoria" styleClass="world-title" style="-fx-font-size: 28px;"/>
+        <Label text="Enter your credentials to access the archives." styleClass="world-desc" wrapText="true" textAlignment="CENTER"/>
+        <Label fx:id="errorLabel" text="" style="-fx-text-fill: #ff4c4c; -fx-font-weight: bold;" visible="false"/>
+        
+        <!-- LOGIN STACK -->
+        <StackPane>
+            <!-- LOGIN FORM -->
+            <VBox fx:id="loginForm" spacing="15" alignment="CENTER">
+                <TextField fx:id="loginEmail" promptText="Email or Username" styleClass="text-field"/>
+                <PasswordField fx:id="loginPassword" promptText="Password" styleClass="text-field"/>
+                <Button text="Enter Realm" onAction="#onLogin" maxWidth="Infinity" styleClass="create-button"/>
+                <Hyperlink text="New to Mythoria? Register here." onAction="#switchForm" styleClass="pill-text" style="-fx-text-fill: -mythoria-silver;"/>
+            </VBox>
+            
+            <!-- REGISTER FORM -->
+            <VBox fx:id="registerForm" spacing="15" alignment="CENTER" visible="false">
+                <TextField fx:id="regEmail" promptText="Email Address" styleClass="text-field"/>
+                <TextField fx:id="regUsername" promptText="Username" styleClass="text-field"/>
+                <PasswordField fx:id="regPassword" promptText="Password" styleClass="text-field"/>
+                <ComboBox fx:id="regRoleSelector" promptText="Select your Path" maxWidth="Infinity" styleClass="combo-box"/>
+                <Button text="Sign Up" onAction="#onRegister" maxWidth="Infinity" styleClass="create-button"/>
+                <Hyperlink text="Already an inhabitant? Return." onAction="#switchForm" styleClass="pill-text" style="-fx-text-fill: -mythoria-silver;"/>
+            </VBox>
+        </StackPane>
+        
+    </VBox>
+</StackPane>

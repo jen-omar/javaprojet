@@ -10,23 +10,23 @@
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="com.example.mythoriadesktop.WorldDetailController" styleClass="world-detail-view">
+<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="tn.esprit.controllers.WorldDetailController" styleClass="world-detail-view">
     <top>
         <VBox spacing="16" styleClass="detail-header">
             <padding>
                 <Insets top="24" right="24" bottom="16" left="24"/>
             </padding>
             <Button text="← Back to Archives" onAction="#onBack" styleClass="back-button"/>
-            
+
             <Label fx:id="worldTitle" styleClass="detail-title" wrapText="true"/>
             <Label fx:id="worldLore" styleClass="detail-lore" wrapText="true"/>
-            
+
             <HBox alignment="CENTER_RIGHT">
                 <Button text="+ New Book" onAction="#onAddBook" styleClass="create-button-small"/>
             </HBox>
         </VBox>
     </top>
-    
+
     <center>
         <ScrollPane fitToWidth="true" styleClass="archives-scroll">
             <content>

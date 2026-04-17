@@ -1,4 +1,4 @@
-package com.example.mythoriadesktop.model;
+package tn.esprit.Models;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -30,4 +30,3 @@ public record World(UUID id, String title, String description, String loreSnapsh
         return s == null ? "" : s.trim();
     }
 }
-

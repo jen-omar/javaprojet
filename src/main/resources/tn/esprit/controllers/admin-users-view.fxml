@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?><?import javafx.scene.layout.*?>
+<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="tn.esprit.controllers.AdminUsersController" styleClass="app-root">
+    
+    <top>
+        <HBox spacing="15" alignment="CENTER_LEFT" styleClass="profile-bar">
+            <Label text="Realm Overseer: User Management" styleClass="form-title"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button text="⟳ Refresh" onAction="#onRefresh" styleClass="button"/>
+            <Label text="ADMINISTRATOR" styleClass="pill-text" style="-fx-text-fill: #ffcc00;"/>
+        </HBox>
+    </top>
+
+    <center>
+        <VBox spacing="15" alignment="TOP_CENTER">
+            <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
+            <Label text="Current Inhabitants" styleClass="archives-title"/>
+            
+            <TableView fx:id="usersTable" VBox.vgrow="ALWAYS">
+                <columns>
+                    <TableColumn fx:id="colId" text="ID" prefWidth="50" />
+                    <TableColumn fx:id="colUsername" text="Username" prefWidth="150" />
+                    <TableColumn fx:id="colEmail" text="Email" prefWidth="200" />
+                    <TableColumn fx:id="colRole" text="Primary Role" prefWidth="150" />
+                </columns>
+            </TableView>
+
+            <HBox spacing="15" alignment="CENTER" styleClass="form-panel">
+                <Label text="Change Selected User Role:" styleClass="form-title" style="-fx-font-size: 14px;"/>
+                <ComboBox fx:id="roleChanger" promptText="Select New Path"/>
+                <Button text="Update Role" onAction="#onChangeRole" styleClass="button"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button text="Ban / Delete User" onAction="#onDeleteUser" styleClass="button" style="-fx-background-color: #7a1b1b;"/>
+            </HBox>
+        </VBox>
+    </center>
+</BorderPane>

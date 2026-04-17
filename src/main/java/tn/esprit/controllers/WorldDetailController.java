@@ -1,8 +1,8 @@
-package com.example.mythoriadesktop;
+package tn.esprit.controllers;
 
-import com.example.mythoriadesktop.data.WorldRepository;
-import com.example.mythoriadesktop.model.Book;
-import com.example.mythoriadesktop.model.World;
+import tn.esprit.data.WorldRepository;
+import tn.esprit.Models.Book;
+import tn.esprit.Models.World;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextInputDialog;
@@ -27,10 +27,10 @@ public class WorldDetailController {
         this.world = world;
         this.repository = repository;
         this.onBack = onBack;
-        
+
         worldTitle.setText(world.title());
         worldLore.setText(Optional.ofNullable(world.loreSnapshot()).orElse("No lore available."));
-        
+
         renderBooks();
     }
 
@@ -73,11 +73,11 @@ public class WorldDetailController {
         card.getStyleClass().add("book-card");
         card.setPrefWidth(160);
         card.setPrefHeight(220);
-        
+
         Label title = new Label(book.title());
         title.getStyleClass().add("book-title");
         title.setWrapText(true);
-        
+
         card.getChildren().add(title);
         return card;
     }

@@ -1,4 +1,4 @@
-package com.example.mythoriadesktop.model;
+package tn.esprit.Models;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -12,4 +12,3 @@ public record Book(UUID id, UUID worldId, String title, String description, Inst
         return s == null ? "" : s.trim();
     }
 }
-

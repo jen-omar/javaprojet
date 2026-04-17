@@ -1,7 +1,7 @@
-package com.example.mythoriadesktop;
+package tn.esprit.controllers;
 
-import com.example.mythoriadesktop.data.WorldRepository;
-import com.example.mythoriadesktop.model.World;
+import tn.esprit.data.WorldRepository;
+import tn.esprit.Models.World;
 import javafx.animation.Interpolator;
 import javafx.animation.ParallelTransition;
 import javafx.animation.ScaleTransition;
@@ -49,28 +49,49 @@ public class GrandArchivesController {
     @FXML
     private StackPane contentStack;
 
-    @FXML
-    private Button navArchives;
+    @FXML private VBox sidebarNav;
+
+    @FXML private Button navArchives;
+    @FXML private Button navFellowship;
+    @FXML private Button navVenues;
+    @FXML private Button navHappenings;
+    @FXML private Button navKinship;
+    @FXML private Button navBazaar;
+    @FXML private Button navUsers;
+    @FXML private Button navProfile;
+    @FXML private Button navLogout;
 
     private final WorldRepository worldRepository = new WorldRepository();
     private FormController formController;
 
     private Node placeholderView;
-
     private Button activeNavButton;
 
     @FXML
     public void initialize() {
-        rankLabel.setText("Journeyman");
-        pcLabel.setText("100 PC");
+        tn.esprit.Models.User user = tn.esprit.util.UserSession.getInstance().getUser();
+        String role = user != null ? user.getPrimaryRole() : "ROLE_CLIENT";
+
+        rankLabel.setText(user != null ? user.getUsername() : "Guest");
+        pcLabel.setText(role);
 
         worldRepository.worlds().addListener((ListChangeListener<World>) c -> renderWorlds());
         renderWorlds();
 
         loadForm();
+        applyRoleConstraints(role);
 
-        setActiveNav(navArchives);
-        showArchives();
+        showPlaceholder("Home Dashboard");
+    }
+
+    private void applyRoleConstraints(String role) {
+        if (!"ROLE_ADMIN".equals(role)) {
+            // Non-Admins don't see User Management
+            if (navUsers != null) {
+                navUsers.setVisible(false);
+                navUsers.setManaged(false);
+            }
+        }
     }
 
     @FXML
@@ -85,9 +106,11 @@ public class GrandArchivesController {
                 case "FELLOWSHIP" -> showPlaceholder("Fellowship");
                 case "VENUES" -> showPlaceholder("Venues");
                 case "HAPPENINGS" -> showPlaceholder("Happenings");
-                case "KINSHIP" -> showPlaceholder("Kinship");
+                case "KINSHIP" -> showKinship();
                 case "BAZAAR" -> showPlaceholder("The Bazaar");
+                case "USERS" -> showUsers();
                 case "PROFILE" -> showPlaceholder("Profile");
+                case "LOGOUT" -> handleLogout();
                 default -> showPlaceholder(route.isBlank() ? "Page" : route);
             }
         }
@@ -132,8 +155,54 @@ public class GrandArchivesController {
         formController.openEdit(world);
     }
 
+    private void clearDynamicViews() {
+        contentStack.getChildren().removeIf(node ->
+            node != archivesScroll &&
+            node != formHost &&
+            node != createButton &&
+            node != placeholderView
+        );
+    }
+
+    private void showUsers() {
+        try {
+            FXMLLoader loader = new FXMLLoader(HelloApplication.class.getResource("admin-users-view.fxml"));
+            Node usersView = loader.load();
+
+            clearDynamicViews();
+            archivesScroll.setVisible(false);
+            archivesScroll.setManaged(false);
+            createButton.setVisible(false);
+            createButton.setManaged(false);
+            hidePlaceholder();
+            formHost.setVisible(false);
+            formHost.setManaged(false);
+
+            contentStack.getChildren().add(usersView);
+        } catch (IOException ex) {
+            ex.printStackTrace();
+            showPlaceholder("Users Interface Missing");
+        }
+    }
+
+    private void handleLogout() {
+        tn.esprit.util.UserSession.getInstance().cleanUserSession();
+        try {
+            javafx.scene.Scene scene = contentStack.getScene();
+            javafx.stage.Stage stage = (javafx.stage.Stage) scene.getWindow();
+            FXMLLoader fxmlLoader = new FXMLLoader(HelloApplication.class.getResource("login-view.fxml"));
+            scene.setRoot(fxmlLoader.load());
+            stage.setTitle("Mythoria - Login");
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
     private void showArchives() {
-        setActiveNav(navArchives);
+        if (navArchives != null) {
+            setActiveNav(navArchives);
+        }
+        clearDynamicViews();
         formHost.setVisible(false);
         formHost.setManaged(false);
         hidePlaceholder();
@@ -143,7 +212,28 @@ public class GrandArchivesController {
         createButton.setManaged(true);
     }
 
+    private void showKinship() {
+        try {
+            FXMLLoader loader = new FXMLLoader(HelloApplication.class.getResource("kinship-view.fxml"));
+            Node kinshipView = loader.load();
+
+            clearDynamicViews();
+            archivesScroll.setVisible(false);
+            archivesScroll.setManaged(false);
+            createButton.setVisible(false);
+            createButton.setManaged(false);
+            hidePlaceholder();
+            formHost.setVisible(false);
+            formHost.setManaged(false);
+
+            contentStack.getChildren().add(kinshipView);
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
     private void showPlaceholder(String title) {
+        clearDynamicViews();
         formHost.setVisible(false);
         formHost.setManaged(false);
         archivesScroll.setVisible(false);
@@ -238,14 +328,15 @@ public class GrandArchivesController {
             Node detailView = loader.load();
             WorldDetailController controller = loader.getController();
             controller.init(world, worldRepository, this::showArchives);
-            
+
+            clearDynamicViews();
             contentStack.getChildren().add(detailView);
-            
+
             javafx.animation.FadeTransition fade = new javafx.animation.FadeTransition(Duration.millis(300), detailView);
             fade.setFromValue(0);
             fade.setToValue(1);
             fade.play();
-            
+
             archivesScroll.setVisible(false);
             archivesScroll.setManaged(false);
             createButton.setVisible(false);
