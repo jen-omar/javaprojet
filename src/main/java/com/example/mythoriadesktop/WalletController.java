@@ -3,6 +3,7 @@ package com.example.mythoriadesktop;
 import com.example.mythoriadesktop.data.WalletRepository;
 import com.example.mythoriadesktop.model.User;
 import com.example.mythoriadesktop.model.Wallet;
+import javafx.css.PseudoClass;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.FXCollections;
@@ -25,8 +26,10 @@ import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 
 public class WalletController {
+    private static final PseudoClass INVALID_PSEUDO_CLASS = PseudoClass.getPseudoClass("invalid");
     private static final String SORT_RECENT = "Plus recent";
     private static final String SORT_BALANCE_ASC = "Solde croissant";
     private static final String SORT_BALANCE_DESC = "Solde decroissant";
@@ -91,6 +94,11 @@ public class WalletController {
     private FilteredList<Wallet> filteredWallets;
     private SortedList<Wallet> sortedWallets;
 
+    @FXML
+    private void initialize() {
+        configureCeilingField();
+    }
+
     public void init(WalletRepository walletRepository, Runnable onBack) {
         this.walletRepository = walletRepository;
         this.onBack = onBack;
@@ -116,7 +124,7 @@ public class WalletController {
             double balance = ValidationUtils.requireNonNegativeAmount(balanceField.getText(), "solde");
             String status = ValidationUtils.requireStatus(statusField.getText());
             String currency = ValidationUtils.requireCurrency(currencyField.getText());
-            double ceiling = ValidationUtils.requireNonNegativeAmount(ceilingField.getText(), "plafond");
+            double ceiling = ValidationUtils.requireStrictlyPositiveAmount(ceilingField.getText(), "plafond");
             ValidationUtils.validateWalletAmounts(balance, ceiling);
             walletRepository.create(
                     userId,
@@ -153,7 +161,7 @@ public class WalletController {
             double balance = ValidationUtils.requireNonNegativeAmount(balanceField.getText(), "solde");
             String status = ValidationUtils.requireStatus(statusField.getText());
             String currency = ValidationUtils.requireCurrency(currencyField.getText());
-            double ceiling = ValidationUtils.requireNonNegativeAmount(ceilingField.getText(), "plafond");
+            double ceiling = ValidationUtils.requireStrictlyPositiveAmount(ceilingField.getText(), "plafond");
             ValidationUtils.validateWalletAmounts(balance, ceiling);
             walletRepository.update(
                     selectedWallet.id(),
@@ -425,7 +433,31 @@ public class WalletController {
         balanceField.setText("0");
         statusField.setText("actif");
         currencyField.setText("TND");
-        ceilingField.setText("0");
+        ceilingField.setText("");
+    }
+
+    private void configureCeilingField() {
+        if (ceilingField == null) {
+            return;
+        }
+        ceilingField.textProperty().addListener((obs, oldValue, newValue) -> updateCeilingFieldState());
+        updateCeilingFieldState();
+    }
+
+    private void updateCeilingFieldState() {
+        if (ceilingField == null) {
+            return;
+        }
+        String value = Optional.ofNullable(ceilingField.getText()).orElse("").trim();
+        boolean invalid = false;
+        if (!value.isBlank()) {
+            try {
+                ValidationUtils.requireStrictlyPositiveAmount(value, "plafond");
+            } catch (IllegalArgumentException ex) {
+                invalid = true;
+            }
+        }
+        ceilingField.pseudoClassStateChanged(INVALID_PSEUDO_CLASS, invalid);
     }
 
     private void selectWalletById(int walletId) {

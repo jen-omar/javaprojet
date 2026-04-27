@@ -480,6 +480,12 @@
     -fx-border-color: rgba(192, 199, 209, 0.70);
 }
 
+.text-field:invalid,
+.text-area:invalid {
+    -fx-border-color: #ef4444;
+    -fx-border-width: 1.5;
+}
+
 .scroll-bar {
     -fx-background-color: transparent;
 }

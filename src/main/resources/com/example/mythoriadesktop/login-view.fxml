@@ -47,6 +47,11 @@
             </VBox>
 
             <VBox spacing="8">
+                <Label text="Telephone" styleClass="login-field-label" />
+                <TextField fx:id="signupPhoneField" promptText="+216..." />
+            </VBox>
+
+            <VBox spacing="8">
                 <Label text="Prenom" styleClass="login-field-label" />
                 <TextField fx:id="signupFirstNameField" promptText="Prenom" />
             </VBox>

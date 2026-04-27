@@ -2,16 +2,21 @@ package com.example.mythoriadesktop;
 
 import com.example.mythoriadesktop.data.UserRepository;
 import com.example.mythoriadesktop.model.User;
+import javafx.css.PseudoClass;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
+import javafx.scene.control.TextFormatter;
 import javafx.scene.layout.VBox;
 
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.UnaryOperator;
 
 public class LoginController {
+    private static final PseudoClass INVALID_PSEUDO_CLASS = PseudoClass.getPseudoClass("invalid");
+
     @FXML
     private VBox loginPane;
 
@@ -37,6 +42,9 @@ public class LoginController {
     private TextField signupEmailField;
 
     @FXML
+    private TextField signupPhoneField;
+
+    @FXML
     private TextField signupFirstNameField;
 
     @FXML
@@ -54,6 +62,12 @@ public class LoginController {
     private UserRepository userRepository;
     private Consumer<User> onLoginSuccess;
     private boolean signupMode;
+
+    @FXML
+    private void initialize() {
+        configureEmailField(signupEmailField);
+        configurePhoneField(signupPhoneField);
+    }
 
     public void init(UserRepository userRepository, Consumer<User> onLoginSuccess) {
         this.userRepository = userRepository;
@@ -79,7 +93,6 @@ public class LoginController {
         try {
             ValidationUtils.requireUsername(username);
         } catch (IllegalArgumentException ignored) {
-            // Login also accepts email, so only validate as username when possible.
             try {
                 ValidationUtils.requireEmail(username);
             } catch (IllegalArgumentException ex) {
@@ -109,6 +122,7 @@ public class LoginController {
 
         String username = read(signupUsernameField);
         String email = read(signupEmailField);
+        String phone = read(signupPhoneField);
         String firstName = read(signupFirstNameField);
         String lastName = read(signupLastNameField);
         String password = Optional.ofNullable(signupPasswordField.getText()).orElse("");
@@ -128,11 +142,14 @@ public class LoginController {
 
         try {
             ValidationUtils.requireUsername(username);
-            ValidationUtils.requireEmail(email);
+            email = ValidationUtils.requireEmail(email);
+            phone = ValidationUtils.optionalPhone(phone);
+            signupEmailField.setText(email);
+            signupPhoneField.setText(phone);
             ValidationUtils.optionalName(firstName, "Prenom");
             ValidationUtils.optionalName(lastName, "Nom");
             ValidationUtils.requireStrongPassword(password);
-            User createdUser = userRepository.registerUser(username, email, password, firstName, lastName);
+            User createdUser = userRepository.registerUser(username, email, password, firstName, lastName, phone);
             setFeedback("Compte cree avec succes. Connexion en cours...", false);
             onLoginSuccess.accept(createdUser);
         } catch (IllegalArgumentException ex) {
@@ -172,6 +189,56 @@ public class LoginController {
         signupPane.setVisible(true);
         signupPane.setManaged(true);
         setFeedback("", false);
+        updateEmailFieldState(signupEmailField);
+        updatePhoneFieldState(signupPhoneField);
+    }
+
+    private void configureEmailField(TextField field) {
+        if (field == null) {
+            return;
+        }
+        field.textProperty().addListener((obs, oldValue, newValue) -> updateEmailFieldState(field));
+        field.focusedProperty().addListener((obs, oldValue, focused) -> {
+            if (!focused) {
+                field.setText(ValidationUtils.normalizeEmail(field.getText()));
+            }
+            updateEmailFieldState(field);
+        });
+        updateEmailFieldState(field);
+    }
+
+    private void updateEmailFieldState(TextField field) {
+        String value = Optional.ofNullable(field.getText()).orElse("");
+        boolean invalid = !value.isBlank() && !ValidationUtils.isValidEmailFormat(value);
+        field.pseudoClassStateChanged(INVALID_PSEUDO_CLASS, invalid);
+    }
+
+    private void configurePhoneField(TextField field) {
+        if (field == null) {
+            return;
+        }
+        UnaryOperator<TextFormatter.Change> filter = change -> {
+            String nextText = change.getControlNewText();
+            if (ValidationUtils.isValidPhoneInput(nextText)) {
+                return change;
+            }
+            return null;
+        };
+        field.setTextFormatter(new TextFormatter<>(filter));
+        field.textProperty().addListener((obs, oldValue, newValue) -> updatePhoneFieldState(field));
+        field.focusedProperty().addListener((obs, oldValue, focused) -> {
+            if (!focused) {
+                field.setText(ValidationUtils.normalizePhone(field.getText()));
+            }
+            updatePhoneFieldState(field);
+        });
+        updatePhoneFieldState(field);
+    }
+
+    private void updatePhoneFieldState(TextField field) {
+        String value = Optional.ofNullable(field.getText()).orElse("");
+        boolean invalid = !ValidationUtils.isValidPhoneFormat(value);
+        field.pseudoClassStateChanged(INVALID_PSEUDO_CLASS, invalid);
     }
 
     private void setFeedback(String message, boolean error) {

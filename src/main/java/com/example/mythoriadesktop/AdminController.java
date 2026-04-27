@@ -4,6 +4,7 @@ import com.example.mythoriadesktop.data.UserRepository;
 import com.example.mythoriadesktop.data.WalletRepository;
 import com.example.mythoriadesktop.model.User;
 import com.example.mythoriadesktop.model.Wallet;
+import javafx.css.PseudoClass;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.FXCollections;
@@ -16,6 +17,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.control.TextFormatter;
 import javafx.stage.FileChooser;
 import javafx.stage.Window;
 
@@ -26,8 +28,12 @@ import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
+import java.util.function.UnaryOperator;
 
 public class AdminController {
+    private static final PseudoClass INVALID_PSEUDO_CLASS = PseudoClass.getPseudoClass("invalid");
+
     @FXML private Label adminHeadline;
     @FXML private Label adminSummary;
     @FXML private Label adminMessage;
@@ -78,6 +84,13 @@ public class AdminController {
     private FilteredList<Wallet> filteredWallets;
     private SortedList<Wallet> sortedWallets;
 
+    @FXML
+    private void initialize() {
+        configureEmailField(adminUserEmailField);
+        configurePhoneField(adminUserPhoneField);
+        configureWalletCeilingField(adminWalletCeilingField);
+    }
+
     public void init(UserRepository userRepository, WalletRepository walletRepository) {
         this.userRepository = userRepository;
         this.walletRepository = walletRepository;
@@ -106,6 +119,8 @@ public class AdminController {
             String firstName = ValidationUtils.optionalName(adminUserFirstNameField.getText(), "Prenom");
             String lastName = ValidationUtils.optionalName(adminUserLastNameField.getText(), "Nom");
             String phone = ValidationUtils.optionalPhone(adminUserPhoneField.getText());
+            adminUserEmailField.setText(email);
+            adminUserPhoneField.setText(phone);
             int score = ValidationUtils.requireNonNegativeInt(adminUserScoreField.getText(), "score");
             String role = ValidationUtils.requireRole(adminUserRoleField.getText());
             userRepository.adminUpdateUser(
@@ -157,7 +172,7 @@ public class AdminController {
             double balance = ValidationUtils.requireNonNegativeAmount(adminWalletBalanceField.getText(), "solde");
             String status = ValidationUtils.requireStatus(adminWalletStatusField.getText());
             String currency = ValidationUtils.requireCurrency(adminWalletCurrencyField.getText());
-            double ceiling = ValidationUtils.requireNonNegativeAmount(adminWalletCeilingField.getText(), "plafond");
+            double ceiling = ValidationUtils.requireStrictlyPositiveAmount(adminWalletCeilingField.getText(), "plafond");
             ValidationUtils.validateWalletAmounts(balance, ceiling);
             walletRepository.update(
                     selected.id(),
@@ -383,12 +398,81 @@ public class AdminController {
         adminUserScoreField.setText("0");
     }
 
+    private void configureEmailField(TextField field) {
+        if (field == null) {
+            return;
+        }
+        field.textProperty().addListener((obs, oldValue, newValue) -> updateEmailFieldState(field));
+        field.focusedProperty().addListener((obs, oldValue, focused) -> {
+            if (!focused) {
+                field.setText(ValidationUtils.normalizeEmail(field.getText()));
+            }
+            updateEmailFieldState(field);
+        });
+        updateEmailFieldState(field);
+    }
+
+    private void configurePhoneField(TextField field) {
+        if (field == null) {
+            return;
+        }
+        UnaryOperator<TextFormatter.Change> filter = change -> {
+            String nextText = change.getControlNewText();
+            if (ValidationUtils.isValidPhoneInput(nextText)) {
+                return change;
+            }
+            return null;
+        };
+        field.setTextFormatter(new TextFormatter<>(filter));
+        field.textProperty().addListener((obs, oldValue, newValue) -> updatePhoneFieldState(field));
+        field.focusedProperty().addListener((obs, oldValue, focused) -> {
+            if (!focused) {
+                field.setText(ValidationUtils.normalizePhone(field.getText()));
+            }
+            updatePhoneFieldState(field);
+        });
+        updatePhoneFieldState(field);
+    }
+
+    private void updateEmailFieldState(TextField field) {
+        String value = Optional.ofNullable(field.getText()).orElse("");
+        boolean invalid = !value.isBlank() && !ValidationUtils.isValidEmailFormat(value);
+        field.pseudoClassStateChanged(INVALID_PSEUDO_CLASS, invalid);
+    }
+
+    private void updatePhoneFieldState(TextField field) {
+        String value = Optional.ofNullable(field.getText()).orElse("");
+        boolean invalid = !ValidationUtils.isValidPhoneFormat(value);
+        field.pseudoClassStateChanged(INVALID_PSEUDO_CLASS, invalid);
+    }
+
     private void clearWalletForm() {
         adminWalletUserIdField.setText("");
         adminWalletBalanceField.setText("0");
         adminWalletStatusField.setText("actif");
         adminWalletCurrencyField.setText("TND");
-        adminWalletCeilingField.setText("0");
+        adminWalletCeilingField.setText("");
+    }
+
+    private void configureWalletCeilingField(TextField field) {
+        if (field == null) {
+            return;
+        }
+        field.textProperty().addListener((obs, oldValue, newValue) -> updateWalletCeilingFieldState(field));
+        updateWalletCeilingFieldState(field);
+    }
+
+    private void updateWalletCeilingFieldState(TextField field) {
+        String value = Optional.ofNullable(field.getText()).orElse("").trim();
+        boolean invalid = false;
+        if (!value.isBlank()) {
+            try {
+                ValidationUtils.requireStrictlyPositiveAmount(value, "plafond");
+            } catch (IllegalArgumentException ex) {
+                invalid = true;
+            }
+        }
+        field.pseudoClassStateChanged(INVALID_PSEUDO_CLASS, invalid);
     }
 
     private void refreshAll() {

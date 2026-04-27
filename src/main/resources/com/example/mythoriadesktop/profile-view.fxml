@@ -64,6 +64,7 @@
         <HBox spacing="12">
             <Button text="Enregistrer" onAction="#onSaveProfile" styleClass="login-button" />
             <Button text="Recharger" onAction="#onReloadProfile" />
+            <Button text="Verify Identity" onAction="#onOpenIdentityVerification" />
             <Region HBox.hgrow="ALWAYS" />
             <Button text="Open Wallet" onAction="#onOpenWallet" />
         </HBox>
@@ -72,6 +73,7 @@
     </VBox>
 
     <StackPane fx:id="walletHost" visible="false" managed="false" VBox.vgrow="ALWAYS" />
+    <StackPane fx:id="identityVerificationHost" visible="false" managed="false" VBox.vgrow="ALWAYS" />
 
     <padding>
         <Insets top="28" right="28" bottom="28" left="28" />

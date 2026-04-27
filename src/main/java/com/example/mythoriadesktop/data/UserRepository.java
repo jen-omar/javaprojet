@@ -65,15 +65,15 @@ public final class UserRepository {
                 .findFirst();
     }
 
-    public User registerUser(String username, String email, String rawPassword, String firstName, String lastName) {
+    public User registerUser(String username, String email, String rawPassword, String firstName, String lastName, String phoneNumber) {
         if (databaseConfig.isConfigured()) {
-            Optional<User> created = registerUserInDatabase(username, email, rawPassword, firstName, lastName);
+            Optional<User> created = registerUserInDatabase(username, email, rawPassword, firstName, lastName, phoneNumber);
             if (created.isPresent()) {
                 return created.get();
             }
         }
 
-        return registerUserInLocalStorage(username, email, rawPassword, firstName, lastName);
+        return registerUserInLocalStorage(username, email, rawPassword, firstName, lastName, phoneNumber);
     }
 
     private Optional<User> authenticateFromDatabase(String login, String rawPassword) {
@@ -108,12 +108,13 @@ public final class UserRepository {
         }
     }
 
-    private Optional<User> registerUserInDatabase(String username, String email, String rawPassword, String firstName, String lastName) {
+    private Optional<User> registerUserInDatabase(String username, String email, String rawPassword, String firstName, String lastName, String phoneNumber) {
         String normalizedUsername = ValidationUtils.requireUsername(username);
         String normalizedEmail = ValidationUtils.requireEmail(email);
         String validatedPassword = ValidationUtils.requireStrongPassword(rawPassword);
         String normalizedFirstName = ValidationUtils.optionalName(firstName, "Prenom");
         String normalizedLastName = ValidationUtils.optionalName(lastName, "Nom");
+        String normalizedPhone = ValidationUtils.optionalPhone(phoneNumber);
 
         try (Connection connection = databaseConnection.getConnection()) {
             if (databaseUserExists(connection, normalizedUsername, normalizedEmail)) {
@@ -122,8 +123,8 @@ public final class UserRepository {
 
             int nextId = nextUserId(connection);
             String sql = """
-                    INSERT INTO user (id, email, username, roles, password, prenom, nom, est_valide, created_at, score)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, 1, NOW(), 0)
+                    INSERT INTO user (id, email, username, roles, password, prenom, nom, phone_number, est_valide, created_at, score)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, NOW(), 0)
                     """;
 
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -134,6 +135,7 @@ public final class UserRepository {
                 statement.setString(5, BCrypt.hashpw(validatedPassword, BCrypt.gensalt()));
                 statement.setString(6, normalizedFirstName);
                 statement.setString(7, normalizedLastName);
+                statement.setString(8, normalizedPhone);
                 statement.executeUpdate();
             }
 
@@ -146,12 +148,13 @@ public final class UserRepository {
         }
     }
 
-    private User registerUserInLocalStorage(String username, String email, String rawPassword, String firstName, String lastName) {
+    private User registerUserInLocalStorage(String username, String email, String rawPassword, String firstName, String lastName, String phoneNumber) {
         String normalizedUsername = ValidationUtils.requireUsername(username);
         String normalizedEmail = ValidationUtils.requireEmail(email);
         String validatedPassword = ValidationUtils.requireStrongPassword(rawPassword);
         String normalizedFirstName = ValidationUtils.optionalName(firstName, "Prenom");
         String normalizedLastName = ValidationUtils.optionalName(lastName, "Nom");
+        String normalizedPhone = ValidationUtils.optionalPhone(phoneNumber);
 
         boolean exists = users.stream().anyMatch(user ->
                 user.username().equals(normalizedUsername) || user.email().equalsIgnoreCase(normalizedEmail));
@@ -174,7 +177,7 @@ public final class UserRepository {
                 normalizedEmail,
                 normalizedFirstName,
                 normalizedLastName,
-                "",
+                normalizedPhone,
                 "user",
                 false
         );
