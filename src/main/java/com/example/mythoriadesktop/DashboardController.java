@@ -3,6 +3,7 @@ package com.example.mythoriadesktop;
 import com.example.mythoriadesktop.data.UserRepository;
 import com.example.mythoriadesktop.data.WalletRepository;
 import com.example.mythoriadesktop.model.User;
+import com.example.mythoriadesktop.services.EmailNotificationService;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -59,6 +60,7 @@ public class DashboardController {
 
     private ProfileController profileController;
     private AdminController adminController;
+    private EmailNotificationService emailNotificationService;
     private Runnable onLogout;
     private Node placeholderView;
     private Label placeholderTitle;
@@ -74,9 +76,13 @@ public class DashboardController {
         showHome();
     }
 
-    public void init(User user, Runnable onLogout) {
+    public void init(User user, Runnable onLogout, EmailNotificationService emailNotificationService) {
         currentUser = user;
         this.onLogout = onLogout;
+        this.emailNotificationService = emailNotificationService;
+        if (adminController != null) {
+            adminController.setEmailNotificationService(emailNotificationService);
+        }
         applyCurrentUser();
     }
 
@@ -157,6 +163,7 @@ public class DashboardController {
             Node adminView = loader.load();
             adminController = loader.getController();
             adminController.init(userRepository, walletRepository);
+            adminController.setEmailNotificationService(emailNotificationService);
             adminHost.getChildren().setAll(adminView);
         } catch (IOException ex) {
             throw new IllegalStateException("Failed to load admin-view.fxml", ex);

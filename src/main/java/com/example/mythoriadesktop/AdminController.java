@@ -4,6 +4,7 @@ import com.example.mythoriadesktop.data.UserRepository;
 import com.example.mythoriadesktop.data.WalletRepository;
 import com.example.mythoriadesktop.model.User;
 import com.example.mythoriadesktop.model.Wallet;
+import com.example.mythoriadesktop.services.EmailNotificationService;
 import javafx.css.PseudoClass;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringWrapper;
@@ -78,6 +79,7 @@ public class AdminController {
 
     private UserRepository userRepository;
     private WalletRepository walletRepository;
+    private EmailNotificationService emailNotificationService;
     private User currentUser;
     private FilteredList<User> filteredUsers;
     private SortedList<User> sortedUsers;
@@ -98,6 +100,10 @@ public class AdminController {
         configureWalletTable();
         configureUserFiltering();
         configureWalletFiltering();
+    }
+
+    public void setEmailNotificationService(EmailNotificationService emailNotificationService) {
+        this.emailNotificationService = emailNotificationService;
     }
 
     public void setCurrentUser(User user) {
@@ -123,7 +129,8 @@ public class AdminController {
             adminUserPhoneField.setText(phone);
             int score = ValidationUtils.requireNonNegativeInt(adminUserScoreField.getText(), "score");
             String role = ValidationUtils.requireRole(adminUserRoleField.getText());
-            userRepository.adminUpdateUser(
+            String oldRole = selected.role();
+            User updatedUser = userRepository.adminUpdateUser(
                     selected.id(),
                     email,
                     firstName,
@@ -132,6 +139,9 @@ public class AdminController {
                     score,
                     role
             ).orElseThrow();
+            if (emailNotificationService != null) {
+                emailNotificationService.sendRoleChangeAlert(updatedUser, oldRole, updatedUser.role());
+            }
             refreshUsers();
             showMessage("User modifie.", false);
         } catch (Exception ex) {

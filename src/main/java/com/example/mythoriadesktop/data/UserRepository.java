@@ -2,6 +2,7 @@ package com.example.mythoriadesktop.data;
 
 import com.example.mythoriadesktop.ValidationUtils;
 import com.example.mythoriadesktop.model.User;
+import com.example.mythoriadesktop.services.EmailNotificationService;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
@@ -216,6 +217,21 @@ public final class UserRepository {
                 .findFirst();
     }
 
+    public boolean updatePassword(User currentUser, String rawPassword, EmailNotificationService emailNotificationService) {
+        if (currentUser == null) {
+            throw new IllegalArgumentException("Current user is required");
+        }
+        String validatedPassword = ValidationUtils.requireStrongPassword(rawPassword);
+
+        boolean updated = currentUser.databaseBacked()
+                ? updatePasswordInDatabase(currentUser, validatedPassword)
+                : updatePasswordInLocalStorage(currentUser, validatedPassword);
+        if (updated && emailNotificationService != null) {
+            emailNotificationService.sendPasswordChangeAlert(currentUser);
+        }
+        return updated;
+    }
+
     private Optional<User> updateProfileInDatabase(User currentUser, String email, String firstName, String lastName, String phoneNumber) {
         String sql = """
                 UPDATE user
@@ -283,6 +299,52 @@ public final class UserRepository {
             LOG.log(Level.WARNING, ex, () -> "Failed to reload SQL user");
             return Optional.empty();
         }
+    }
+
+    private boolean updatePasswordInDatabase(User currentUser, String validatedPassword) {
+        String sql = """
+                UPDATE user
+                SET password = ?
+                WHERE id = ?
+                """;
+
+        try (Connection connection = databaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, BCrypt.hashpw(validatedPassword, BCrypt.gensalt()));
+            statement.setInt(2, Integer.parseInt(currentUser.id()));
+            return statement.executeUpdate() > 0;
+        } catch (Exception ex) {
+            LOG.log(Level.WARNING, ex, () -> "Failed to update SQL password");
+            return false;
+        }
+    }
+
+    private boolean updatePasswordInLocalStorage(User currentUser, String validatedPassword) {
+        for (int i = 0; i < users.size(); i++) {
+            User existing = users.get(i);
+            if (!existing.id().equals(currentUser.id())) {
+                continue;
+            }
+
+            User updated = new User(
+                    existing.id(),
+                    existing.username(),
+                    existing.displayName(),
+                    BCrypt.hashpw(validatedPassword, BCrypt.gensalt()),
+                    existing.rank(),
+                    existing.points(),
+                    existing.email(),
+                    existing.firstName(),
+                    existing.lastName(),
+                    existing.phoneNumber(),
+                    existing.role(),
+                    false
+            );
+            users.set(i, updated);
+            saveToDisk();
+            return true;
+        }
+        return false;
     }
 
     private User mapDatabaseUser(ResultSet rs, String storedPassword, boolean databaseBacked) throws java.sql.SQLException {

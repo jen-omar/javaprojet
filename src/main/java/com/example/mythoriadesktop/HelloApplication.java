@@ -2,6 +2,7 @@ package com.example.mythoriadesktop;
 
 import com.example.mythoriadesktop.data.UserRepository;
 import com.example.mythoriadesktop.model.User;
+import com.example.mythoriadesktop.services.EmailNotificationService;
 import com.example.mythoriadesktop.services.OtpService;
 import com.example.mythoriadesktop.services.TwilioSmsService;
 import javafx.application.Application;
@@ -16,6 +17,7 @@ public class HelloApplication extends Application {
     private final UserRepository userRepository = new UserRepository();
     private final OtpService otpService = new OtpService();
     private final TwilioSmsService smsService = new TwilioSmsService();
+    private final EmailNotificationService emailNotificationService = new EmailNotificationService();
     private Stage stage;
 
     @Override
@@ -58,7 +60,8 @@ public class HelloApplication extends Application {
             FXMLLoader loader = new FXMLLoader(HelloApplication.class.getResource("dashboard-view.fxml"));
             Parent root = loader.load();
             DashboardController controller = loader.getController();
-            controller.init(user, this::handleLogout);
+            controller.init(user, this::handleLogout, emailNotificationService);
+            emailNotificationService.sendLoginAlert(user);
 
             Scene scene = new Scene(root, 1200, 800);
             scene.getStylesheets().add(HelloApplication.class.getResource("style.css").toExternalForm());
