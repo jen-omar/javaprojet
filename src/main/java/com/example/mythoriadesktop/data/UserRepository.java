@@ -18,6 +18,8 @@ import java.security.NoSuchAlgorithmException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Formatter;
 import java.util.List;
@@ -117,6 +119,7 @@ public final class UserRepository {
         String normalizedPhone = ValidationUtils.optionalPhone(phoneNumber);
 
         try (Connection connection = databaseConnection.getConnection()) {
+            ensurePhoneNumberColumn(connection);
             if (databaseUserExists(connection, normalizedUsername, normalizedEmail)) {
                 throw new IllegalArgumentException("Username or email already exists.");
             }
@@ -220,14 +223,16 @@ public final class UserRepository {
                 WHERE id = ?
                 """;
 
-        try (Connection connection = databaseConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setString(1, ValidationUtils.requireEmail(email));
-            statement.setString(2, ValidationUtils.optionalName(firstName, "Prenom"));
-            statement.setString(3, ValidationUtils.optionalName(lastName, "Nom"));
-            statement.setString(4, ValidationUtils.optionalPhone(phoneNumber));
-            statement.setInt(5, Integer.parseInt(currentUser.id()));
-            statement.executeUpdate();
+        try (Connection connection = databaseConnection.getConnection()) {
+            ensurePhoneNumberColumn(connection);
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setString(1, ValidationUtils.requireEmail(email));
+                statement.setString(2, ValidationUtils.optionalName(firstName, "Prenom"));
+                statement.setString(3, ValidationUtils.optionalName(lastName, "Nom"));
+                statement.setString(4, ValidationUtils.optionalPhone(phoneNumber));
+                statement.setInt(5, Integer.parseInt(currentUser.id()));
+                statement.executeUpdate();
+            }
 
             return findUserInDatabase(currentUser.id());
         } catch (Exception ex) {
@@ -440,20 +445,22 @@ public final class UserRepository {
                 WHERE id = ?
                 """;
 
-        try (Connection connection = databaseConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setString(1, ValidationUtils.requireEmail(email));
-            statement.setString(2, ValidationUtils.optionalName(firstName, "Prenom"));
-            statement.setString(3, ValidationUtils.optionalName(lastName, "Nom"));
-            statement.setString(4, ValidationUtils.optionalPhone(phoneNumber));
-            statement.setInt(5, score);
-            statement.setString(6, toDatabaseRoles(ValidationUtils.requireRole(role)));
-            statement.setInt(7, Integer.parseInt(userId));
-            int updatedRows = statement.executeUpdate();
-            if (updatedRows > 0) {
-                return findUserInDatabase(userId);
+        try (Connection connection = databaseConnection.getConnection()) {
+            ensurePhoneNumberColumn(connection);
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setString(1, ValidationUtils.requireEmail(email));
+                statement.setString(2, ValidationUtils.optionalName(firstName, "Prenom"));
+                statement.setString(3, ValidationUtils.optionalName(lastName, "Nom"));
+                statement.setString(4, ValidationUtils.optionalPhone(phoneNumber));
+                statement.setInt(5, score);
+                statement.setString(6, toDatabaseRoles(ValidationUtils.requireRole(role)));
+                statement.setInt(7, Integer.parseInt(userId));
+                int updatedRows = statement.executeUpdate();
+                if (updatedRows > 0) {
+                    return findUserInDatabase(userId);
+                }
+                return Optional.empty();
             }
-            return Optional.empty();
         } catch (Exception ex) {
             LOG.log(Level.WARNING, ex, () -> "Failed to admin update user " + userId);
             throw new IllegalStateException("Database error while updating user: " + ex.getMessage(), ex);
@@ -497,6 +504,20 @@ public final class UserRepository {
                 return rs.getInt("next_id");
             }
             return 1;
+        }
+    }
+
+    private void ensurePhoneNumberColumn(Connection connection) {
+        String sql = "ALTER TABLE user ADD COLUMN phone_number VARCHAR(30)";
+        try (Statement statement = connection.createStatement()) {
+            statement.execute(sql);
+        } catch (SQLException ex) {
+            String state = Optional.ofNullable(ex.getSQLState()).orElse("");
+            boolean duplicateColumn = "42S21".equals(state)
+                    || Optional.ofNullable(ex.getMessage()).orElse("").toLowerCase().contains("duplicate column");
+            if (!duplicateColumn) {
+                LOG.log(Level.WARNING, ex, () -> "Unable to ensure phone_number column");
+            }
         }
     }
 

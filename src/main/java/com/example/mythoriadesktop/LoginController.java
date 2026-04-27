@@ -103,6 +103,10 @@ public class LoginController {
 
         Optional<User> user = userRepository.authenticate(username, password);
         if (user.isPresent()) {
+            if (!canUseOtp(user.get())) {
+                setFeedback("La double authentification exige un compte MySQL avec un telephone valide.", true);
+                return;
+            }
             setFeedback("", false);
             onLoginSuccess.accept(user.get());
             return;
@@ -150,6 +154,10 @@ public class LoginController {
             ValidationUtils.optionalName(lastName, "Nom");
             ValidationUtils.requireStrongPassword(password);
             User createdUser = userRepository.registerUser(username, email, password, firstName, lastName, phone);
+            if (!canUseOtp(createdUser)) {
+                setFeedback("Compte cree, mais la 2FA exige un compte MySQL avec un telephone valide.", true);
+                return;
+            }
             setFeedback("Compte cree avec succes. Connexion en cours...", false);
             onLoginSuccess.accept(createdUser);
         } catch (IllegalArgumentException ex) {
@@ -251,5 +259,9 @@ public class LoginController {
 
     private String read(TextField field) {
         return Optional.ofNullable(field.getText()).orElse("").trim();
+    }
+
+    private boolean canUseOtp(User user) {
+        return user.databaseBacked() && !Optional.ofNullable(user.phoneNumber()).orElse("").isBlank();
     }
 }
