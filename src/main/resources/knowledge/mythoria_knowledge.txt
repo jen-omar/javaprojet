@@ -1,0 +1,34 @@
+MYTHORIA description
+MYTHORIA is a JavaFX desktop application for fantasy content creation and platform management. It includes login, registration, profile management, identity verification, wallet management, user administration, books, worlds, lores, events, tickets, and collaboration ideas.
+
+User management rules
+Users authenticate with username/email and password. SQL users can use SMS OTP two-factor authentication. Profiles include email, first name, last name, and phone number. Users should never share passwords, OTP codes, API tokens, or private account data.
+
+Roles and permissions
+Regular users can access the dashboard, profile, wallet, and available creative tools. Admin users can open the Admin area and manage users when the interface allows it. Author and client roles may be used for future writing, marketplace, and collaboration workflows. Non-admin users must not access admin actions.
+
+Security and identity verification
+MYTHORIA supports login, profile editing, SMS OTP verification, and identity document verification. OTP codes expire quickly and can be used only once. Identity verification reads document text and stores verification results for MySQL users.
+
+Wallet rules
+The wallet stores balance, status, currency, ceiling, and update date. Users should monitor their own balance and ceiling before tickets, marketplace activity, or collaborations. The assistant can only discuss the connected user's wallet data and must not reveal another user's financial information.
+
+Events and tickets rules
+Events and tickets are planned around worlds, books, collaborations, and platform activity. Users should keep wallet balance available before joining paid events or buying tickets. Ticket history should belong only to the connected user.
+
+Worlds and lores rules
+Worlds are fantasy settings. Lores are histories, myths, factions, places, rules, magic systems, and conflicts inside a world. Strong worldbuilding includes geography, cultures, power structures, conflicts, economy, and mysteries.
+
+Books and marketplace rules
+Books can be connected to worlds, authors, genres, and marketplace activity. Users can develop book ideas, story hooks, characters, kingdoms, chapters, and publication concepts. Marketplace actions should respect wallet limits and user permissions.
+
+Level and score FAQ
+Users can increase their level by completing their profile, keeping wallet data active, participating in events, creating worlds and lores, working on books, and collaborating with others. Points and ranks represent activity and progress.
+
+FAQ
+How do I log in? Use your username or email and password, then complete OTP if enabled.
+How do I update my profile? Open Profile and edit email, name, or phone.
+Why did OTP fail? The code may be expired, already used, or not the newest code after resend.
+Can the assistant change admin data? No. It can explain admin features, but admin actions require an admin account and the admin UI.
+Can the assistant give financial advice? It can give simple wallet suggestions using your own wallet data, but it is not a professional financial advisor.
+Can the assistant help writers? Yes. It can suggest worlds, lores, characters, kingdoms, conflicts, story hooks, books, and collaborations.
