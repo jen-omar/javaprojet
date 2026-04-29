@@ -79,6 +79,44 @@ public final class UserRepository {
         return registerUserInLocalStorage(username, email, rawPassword, firstName, lastName, phoneNumber);
     }
 
+    public Optional<User> findById(String userId) {
+        if (databaseConfig.isConfigured()) {
+            Optional<User> databaseUser = findUserInDatabase(userId);
+            if (databaseUser.isPresent()) {
+                return databaseUser;
+            }
+        }
+
+        return users.stream()
+                .filter(user -> user.id().equals(userId))
+                .findFirst();
+    }
+
+    public boolean updateScoreAndLevel(String userId, int score, String level) {
+        int normalizedScore = Math.max(0, score);
+        String normalizedLevel = Optional.ofNullable(level).orElse(rankFromScore(normalizedScore)).trim();
+        if (normalizedLevel.isBlank()) {
+            normalizedLevel = rankFromScore(normalizedScore);
+        }
+
+        if (databaseConfig.isConfigured() && updateScoreAndLevelInDatabase(userId, normalizedScore, normalizedLevel)) {
+            return true;
+        }
+
+        for (int i = 0; i < users.size(); i++) {
+            User existing = users.get(i);
+            if (!existing.id().equals(userId)) {
+                continue;
+            }
+
+            users.set(i, withScoreAndLevel(existing, normalizedScore, normalizedLevel, false));
+            saveToDisk();
+            return true;
+        }
+
+        return false;
+    }
+
     private Optional<User> authenticateFromDatabase(String login, String rawPassword) {
         String sql = """
                 SELECT *
@@ -121,14 +159,15 @@ public final class UserRepository {
 
         try (Connection connection = databaseConnection.getConnection()) {
             ensurePhoneNumberColumn(connection);
+            ensureLevelColumn(connection);
             if (databaseUserExists(connection, normalizedUsername, normalizedEmail)) {
                 throw new IllegalArgumentException("Username or email already exists.");
             }
 
             int nextId = nextUserId(connection);
             String sql = """
-                    INSERT INTO user (id, email, username, roles, password, prenom, nom, phone_number, est_valide, created_at, score)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, NOW(), 0)
+                    INSERT INTO user (id, email, username, roles, password, prenom, nom, phone_number, est_valide, created_at, score, level)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, NOW(), 0, ?)
                     """;
 
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -140,6 +179,7 @@ public final class UserRepository {
                 statement.setString(6, normalizedFirstName);
                 statement.setString(7, normalizedLastName);
                 statement.setString(8, normalizedPhone);
+                statement.setString(9, rankFromScore(0));
                 statement.executeUpdate();
             }
 
@@ -176,7 +216,7 @@ public final class UserRepository {
                 normalizedUsername,
                 displayName,
                 BCrypt.hashpw(validatedPassword, BCrypt.gensalt()),
-                "Neophyte",
+                rankFromScore(0),
                 0,
                 normalizedEmail,
                 normalizedFirstName,
@@ -357,13 +397,17 @@ public final class UserRepository {
         }
 
         int points = rs.getInt("score");
+        String level = Optional.ofNullable(readStringSafely(rs, "level")).orElse("").trim();
+        if (level.isBlank()) {
+            level = rankFromScore(points);
+        }
         String role = extractRole(rs, username);
         return new User(
                 String.valueOf(rs.getInt("id")),
                 username,
                 displayName,
                 storedPassword,
-                rankFromScore(points),
+                level,
                 points,
                 Optional.ofNullable(rs.getString("email")).orElse(""),
                 firstName,
@@ -384,12 +428,18 @@ public final class UserRepository {
 
     private static String rankFromScore(int score) {
         if (score >= 1000) {
-            return "Elder";
+            return "L\u00e9gende";
+        }
+        if (score >= 600) {
+            return "Expert";
+        }
+        if (score >= 300) {
+            return "Avanc\u00e9";
         }
         if (score >= 100) {
-            return "Journeyman";
+            return "Actif";
         }
-        return "Neophyte";
+        return "D\u00e9butant";
     }
 
     private void loadFromDisk() {
@@ -443,7 +493,7 @@ public final class UserRepository {
                 "scribe",
                 "Grand Scribe",
                 hashPassword("mythoria123"),
-                "Journeyman",
+                rankFromScore(100),
                 100,
                 "scribe@mythoria.local",
                 "Grand",
@@ -503,20 +553,22 @@ public final class UserRepository {
     public Optional<User> adminUpdateUser(String userId, String email, String firstName, String lastName, String phoneNumber, int score, String role) {
         String sql = """
                 UPDATE user
-                SET email = ?, prenom = ?, nom = ?, phone_number = ?, score = ?, roles = ?
+                SET email = ?, prenom = ?, nom = ?, phone_number = ?, score = ?, level = ?, roles = ?
                 WHERE id = ?
                 """;
 
         try (Connection connection = databaseConnection.getConnection()) {
             ensurePhoneNumberColumn(connection);
+            ensureLevelColumn(connection);
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
                 statement.setString(1, ValidationUtils.requireEmail(email));
                 statement.setString(2, ValidationUtils.optionalName(firstName, "Prenom"));
                 statement.setString(3, ValidationUtils.optionalName(lastName, "Nom"));
                 statement.setString(4, ValidationUtils.optionalPhone(phoneNumber));
                 statement.setInt(5, score);
-                statement.setString(6, toDatabaseRoles(ValidationUtils.requireRole(role)));
-                statement.setInt(7, Integer.parseInt(userId));
+                statement.setString(6, rankFromScore(score));
+                statement.setString(7, toDatabaseRoles(ValidationUtils.requireRole(role)));
+                statement.setInt(8, Integer.parseInt(userId));
                 int updatedRows = statement.executeUpdate();
                 if (updatedRows > 0) {
                     return findUserInDatabase(userId);
@@ -581,6 +633,58 @@ public final class UserRepository {
                 LOG.log(Level.WARNING, ex, () -> "Unable to ensure phone_number column");
             }
         }
+    }
+
+    private void ensureLevelColumn(Connection connection) {
+        String sql = "ALTER TABLE user ADD COLUMN level VARCHAR(30) DEFAULT 'D\u00e9butant'";
+        try (Statement statement = connection.createStatement()) {
+            statement.execute(sql);
+        } catch (SQLException ex) {
+            String state = Optional.ofNullable(ex.getSQLState()).orElse("");
+            boolean duplicateColumn = "42S21".equals(state)
+                    || Optional.ofNullable(ex.getMessage()).orElse("").toLowerCase().contains("duplicate column");
+            if (!duplicateColumn) {
+                LOG.log(Level.WARNING, ex, () -> "Unable to ensure level column");
+            }
+        }
+    }
+
+    private boolean updateScoreAndLevelInDatabase(String userId, int score, String level) {
+        String sql = """
+                UPDATE user
+                SET score = ?, level = ?
+                WHERE id = ?
+                """;
+
+        try (Connection connection = databaseConnection.getConnection()) {
+            ensureLevelColumn(connection);
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setInt(1, score);
+                statement.setString(2, level);
+                statement.setInt(3, Integer.parseInt(userId));
+                return statement.executeUpdate() > 0;
+            }
+        } catch (Exception ex) {
+            LOG.log(Level.WARNING, ex, () -> "Failed to update SQL score for user " + userId);
+            return false;
+        }
+    }
+
+    private static User withScoreAndLevel(User user, int score, String level, boolean databaseBacked) {
+        return new User(
+                user.id(),
+                user.username(),
+                user.displayName(),
+                user.passwordHash(),
+                level,
+                score,
+                user.email(),
+                user.firstName(),
+                user.lastName(),
+                user.phoneNumber(),
+                user.role(),
+                databaseBacked
+        );
     }
 
     private static String normalizeRole(String value) {
