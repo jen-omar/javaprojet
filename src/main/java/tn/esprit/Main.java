@@ -9,6 +9,8 @@ import tn.esprit.controllers.HelloApplication;
  */
 public class Main {
     public static void main(String[] args) {
+        // JVM Flag to allow media access (Camera/Mic) in JavaFX WebView
+        System.setProperty("javafx.web.allow.media.access", "true");
         Application.launch(HelloApplication.class, args);
     }
 }

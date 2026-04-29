@@ -108,6 +108,21 @@ public class UserDAO implements GlobalInterface<User> {
         return null;
     }
 
+    public User getById(int id) {
+        String req = "SELECT * FROM user WHERE id = ?";
+        try (PreparedStatement ps = cnx.prepareStatement(req)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapResultSetToUser(rs);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("❌ Error getting user by id: " + e.getMessage());
+        }
+        return null;
+    }
+
     private User mapResultSetToUser(ResultSet rs) throws SQLException {
         return new User(
             rs.getInt("id"),

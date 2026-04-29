@@ -1,0 +1,34 @@
+{
+  "default": [
+    {
+      "sender": "Ali",
+      "text": "Hey! Are we meeting tomorrow?",
+      "time": "00:04",
+      "date": "2026-03-05"
+    },
+    {
+      "sender": "Me",
+      "text": "Yes, 3pm at the office!",
+      "time": "00:04",
+      "date": "2026-03-05"
+    },
+    {
+      "sender": "Ali",
+      "text": "Perfect. Should I bring the mockups?",
+      "time": "00:04",
+      "date": "2026-03-05"
+    },
+    {
+      "sender": "Me",
+      "text": "Yes, please bring the mockups so we can review them.",
+      "time": "00:08",
+      "date": "2026-03-05"
+    },
+    {
+      "sender": "Me",
+      "text": "Sounds good! I'm looking forward to reviewing the mockups with you tomorrow. See you then!",
+      "time": "00:09",
+      "date": "2026-03-05"
+    }
+  ]
+}

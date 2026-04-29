@@ -16,6 +16,7 @@ import tn.esprit.Models.Brief;
 import tn.esprit.Models.Proposal;
 import tn.esprit.services.BriefService;
 import tn.esprit.services.ProposalService;
+import tn.esprit.services.EmailService;
 
 import java.io.FileOutputStream;
 import java.time.LocalDate;
@@ -27,6 +28,8 @@ public class KinshipController {
     // --- Services ---
     private final BriefService briefService = new BriefService();
     private final ProposalService proposalService = new ProposalService();
+    private final EmailService emailService = new EmailService();
+    private final tn.esprit.services.UserDAO userDAO = new tn.esprit.services.UserDAO();
 
     // --- Session Info ---
     private String currentRole;
@@ -128,9 +131,21 @@ public class KinshipController {
         if ("ROLE_CLIENT".equals(currentRole)) {
             briefData.setAll(briefService.getByClient(currentUserId));
         } else if ("ROLE_AUTHOR".equals(currentRole)) {
-            briefData.setAll(briefService.getByStatus("OPEN"));
             // Authors also view their proposal history initially
             proposalData.setAll(proposalService.getByArtistId(currentUserId));
+            
+            java.util.Set<Integer> proposedBriefIds = new java.util.HashSet<>();
+            for (Proposal p : proposalData) {
+                proposedBriefIds.add(p.getBriefId());
+            }
+            
+            java.util.List<Brief> authorBriefs = new java.util.ArrayList<>();
+            for (Brief b : briefService.getAll()) {
+                if ("OPEN".equals(b.getStatus()) || proposedBriefIds.contains(b.getId())) {
+                    authorBriefs.add(b);
+                }
+            }
+            briefData.setAll(authorBriefs);
             renderProposals();
         } else {
             briefData.setAll(briefService.getAll());
@@ -182,6 +197,7 @@ public class KinshipController {
             String lowerCaseFilter = query.toLowerCase();
             if (brief.getTitle().toLowerCase().contains(lowerCaseFilter)) return true;
             if (brief.getDescription().toLowerCase().contains(lowerCaseFilter)) return true;
+            if (brief.getClientUsername() != null && brief.getClientUsername().toLowerCase().contains(lowerCaseFilter)) return true;
             return false;
         });
 
@@ -318,6 +334,14 @@ public class KinshipController {
             btnDelete.setOnAction(e -> triggerDeleteProposal(p));
             
             actions.getChildren().addAll(btnUpdate, btnDelete);
+        }
+
+        if (p.isAccepted()) {
+            Button btnChat = new Button("Discussion");
+            btnChat.getStyleClass().add("nav-button");
+            btnChat.setStyle("-fx-border-color: -mythoria-gold; -fx-text-fill: -mythoria-gold;");
+            btnChat.setOnAction(e -> onOpenDiscussion(p));
+            actions.getChildren().add(btnChat);
         }
 
         if (isClientViewing && !p.isAccepted() && "OPEN".equals(activeViewingBrief.getStatus())) {
@@ -517,6 +541,14 @@ public class KinshipController {
             if (selectedProposalForEdit == null) {
                 Proposal p = new Proposal(price, days, cover, LocalDateTime.now(), false, currentUserId, activeViewingBrief.getId());
                 proposalService.add(p);
+                
+                // Notify Client
+                tn.esprit.Models.User client = userDAO.getById(activeViewingBrief.getClientId());
+                if (client != null) {
+                    emailService.sendEmail(client.getEmail(), "New Offer on Your Quest!", 
+                        "Salutations, " + client.getUsername() + "!\n\nA brave artisan has made an offer on your quest: " + activeViewingBrief.getTitle());
+                }
+
                 showAlert(Alert.AlertType.INFORMATION, "Success", "Proposal Sent!");
             } else {
                 selectedProposalForEdit.setPrice(price);
@@ -563,10 +595,43 @@ public class KinshipController {
         if (activeViewingBrief != null) {
             boolean success = briefService.acceptProposal(activeViewingBrief.getId(), p.getId());
             if (success) {
+                // Notify Author
+                tn.esprit.Models.User author = userDAO.getById(p.getArtistId());
+                if (author != null) {
+                    emailService.sendEmail(author.getEmail(), "Proposal Accepted!", 
+                        "Your Proposal for '" + activeViewingBrief.getTitle() + "' has been accepted! Start the discussion with the client!");
+                }
+
                 showAlert(Alert.AlertType.INFORMATION, "Pact Sealed", "Proposal has been accepted!");
                 refreshData();
                 onViewQuest(activeViewingBrief); // Reload to see accepted badge
             }
+        }
+    }
+
+    private void onOpenDiscussion(Proposal p) {
+        try {
+            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("discussion-view.fxml"));
+            javafx.scene.Parent chatRoot = loader.load();
+            
+            MessageController controller = loader.getController();
+            
+            // Determine recipient (the other person in the chat)
+            int recipientId = (currentUserId == p.getArtistId()) ? activeViewingBrief.getClientId() : p.getArtistId();
+            
+            controller.initChat(p.getBriefId(), recipientId, activeViewingBrief.getTitle());
+            
+            // Find contentStack to keep sidebar visible
+            StackPane contentStack = (StackPane) mainDashboardContent.getScene().lookup("#contentStack");
+            if (contentStack != null) {
+                contentStack.getChildren().add(chatRoot);
+            } else {
+                // Fallback if contentStack not found (unlikely)
+                mainDashboardContent.getScene().setRoot(chatRoot);
+            }
+        } catch (java.io.IOException e) {
+            e.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Error", "Could not open discussion room.");
         }
     }
 
