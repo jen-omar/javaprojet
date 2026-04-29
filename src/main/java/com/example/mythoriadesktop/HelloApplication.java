@@ -12,6 +12,7 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.util.Optional;
 
 public class HelloApplication extends Application {
     private final UserRepository userRepository = new UserRepository();
@@ -31,12 +32,25 @@ public class HelloApplication extends Application {
         FXMLLoader loader = new FXMLLoader(HelloApplication.class.getResource("login-view.fxml"));
         Parent root = loader.load();
         LoginController controller = loader.getController();
-        controller.init(userRepository, this::showOtpScene);
+        controller.init(userRepository, this::continueAfterPasswordLogin);
 
         Scene scene = new Scene(root, 1200, 800);
         scene.getStylesheets().add(HelloApplication.class.getResource("style.css").toExternalForm());
         stage.setTitle("Mythoria - Login");
         stage.setScene(scene);
+    }
+
+    private void continueAfterPasswordLogin(User user) {
+        if (requiresSmsOtp(user)) {
+            showOtpScene(user);
+            return;
+        }
+
+        showMainScene(user);
+    }
+
+    private boolean requiresSmsOtp(User user) {
+        return user.databaseBacked() && !Optional.ofNullable(user.phoneNumber()).orElse("").isBlank();
     }
 
     private void showOtpScene(User user) {
