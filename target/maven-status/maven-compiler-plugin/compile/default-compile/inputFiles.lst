@@ -1,4 +1,5 @@
 C:\Users\jenao\Desktop\marketplaceJAVA22\marketplaceJAVA\src\main\java\com\marketplace\controllers\ProductController.java
+C:\Users\jenao\Desktop\marketplaceJAVA22\marketplaceJAVA\src\main\java\com\marketplace\services\InvoiceService.java
 C:\Users\jenao\Desktop\marketplaceJAVA22\marketplaceJAVA\src\main\java\com\marketplace\controllers\BidController.java
 C:\Users\jenao\Desktop\marketplaceJAVA22\marketplaceJAVA\src\main\java\com\marketplace\models\Review.java
 C:\Users\jenao\Desktop\marketplaceJAVA22\marketplaceJAVA\src\main\java\com\marketplace\services\ProductService.java
@@ -11,6 +12,7 @@ C:\Users\jenao\Desktop\marketplaceJAVA22\marketplaceJAVA\src\main\java\com\marke
 C:\Users\jenao\Desktop\marketplaceJAVA22\marketplaceJAVA\src\main\java\com\marketplace\controllers\OrderController.java
 C:\Users\jenao\Desktop\marketplaceJAVA22\marketplaceJAVA\src\main\java\com\marketplace\services\BidService.java
 C:\Users\jenao\Desktop\marketplaceJAVA22\marketplaceJAVA\src\main\java\com\marketplace\models\Order.java
+C:\Users\jenao\Desktop\marketplaceJAVA22\marketplaceJAVA\src\main\java\com\marketplace\services\QuizService.java
 C:\Users\jenao\Desktop\marketplaceJAVA22\marketplaceJAVA\src\main\java\com\marketplace\util\MyConnection.java
 C:\Users\jenao\Desktop\marketplaceJAVA22\marketplaceJAVA\src\main\java\com\marketplace\MainApp.java
 C:\Users\jenao\Desktop\marketplaceJAVA22\marketplaceJAVA\src\main\java\com\marketplace\util\SessionManager.java
@@ -21,5 +23,6 @@ C:\Users\jenao\Desktop\marketplaceJAVA22\marketplaceJAVA\src\main\java\com\marke
 C:\Users\jenao\Desktop\marketplaceJAVA22\marketplaceJAVA\src\main\java\com\marketplace\models\Product.java
 C:\Users\jenao\Desktop\marketplaceJAVA22\marketplaceJAVA\src\main\java\com\marketplace\services\ChatbotService.java
 C:\Users\jenao\Desktop\marketplaceJAVA22\marketplaceJAVA\src\main\java\com\marketplace\services\ReviewService.java
+C:\Users\jenao\Desktop\marketplaceJAVA22\marketplaceJAVA\src\main\java\com\marketplace\services\VoiceService.java
 C:\Users\jenao\Desktop\marketplaceJAVA22\marketplaceJAVA\src\main\java\com\marketplace\controllers\WishlistController.java
 C:\Users\jenao\Desktop\marketplaceJAVA22\marketplaceJAVA\src\main\java\com\marketplace\services\StripeService.java

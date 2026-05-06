@@ -26,13 +26,19 @@ public class OrderService implements IService<Order> {
     public void add(Order o) {
         String sql = "INSERT INTO `order` (buyer_name, price, order_type, created_at, product_id) " +
                 "VALUES (?, ?, ?, NOW(), ?)";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, o.getBuyerName());
             ps.setBigDecimal(2, o.getPrice());
             ps.setString(3, o.getOrderType());
             ps.setInt(4, o.getProductId());
             ps.executeUpdate();
-            System.out.println("✓ Commande ajoutée.");
+            
+            try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    o.setId(generatedKeys.getInt(1));
+                }
+            }
+            System.out.println("✓ Commande ajoutée : " + o.getId());
         } catch (SQLException e) {
             e.printStackTrace();
         }

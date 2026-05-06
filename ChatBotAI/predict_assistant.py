@@ -128,8 +128,11 @@ INTENT_KEYWORDS = {
     'review_guide':['review','avis','noter','rate','feedback','évaluer'],
     'shipping_info':['shipping','delivery','livraison','expédition','emballage'],
     'payment_help':['payment','paiement','stripe','carte','card','refund','remboursement'],
-    'about_marketplace':['about','marketplace','platform','plateforme','à propos','site'],
+    'about_marketplace':['about','marketplace','platform','plateforme','à propos','site','c\'est quoi','quoi sert'],
     'account_help':['account','login','password','compte','connexion','mot de passe','profil'],
+    'sell_art':['sell','vendre','devenir artiste','publier','poster','how to sell'],
+    'creator_info':['who made','creator','développeur','créateur','fabriqué','équipe'],
+    'small_talk':['how are you','comment vas-tu','ça va','ca va','qui es-tu','ton nom','what is your name'],
     'compliment':['great','awesome','good bot','bravo','génial','super bot'],
     'negative':['wrong','bad','stupid','nul','faux','mauvais','useless','inutile'],
 }
@@ -183,6 +186,9 @@ def keyword_match(msg, context):
         (['landscape','paysage'],'search_by_category'),
         (['portrait'],'search_by_category'),
         (['modern','moderne'],'search_by_category'),
+        (['vendre','sell','comment vendre','publier','poster'],'sell_art'),
+        (['qui es-tu','ton nom','nom','who are you','your name'],'small_talk'),
+        (['créateur','développeur','qui a fait','made by','creator'],'creator_info'),
     ]
     for keywords, intent in checks:
         if any(w in msg_lower for w in keywords):
@@ -263,72 +269,71 @@ def query_products(where_clause, params=None, lang='fr'):
 
 def format_products(rows, title_fr, title_en, lang):
     if not rows:
-        return "Aucun produit trouvé. / No products found." if lang == 'fr' else "No products found. / Aucun produit trouvé."
+        return "Aucun produit trouvé."
     title = title_fr if lang == 'fr' else title_en
-    lines = [f"• {r['name']} — {r['price']} € (par {r['artist_name']})" for r in rows]
+    lines = [f"- {r['name']} : {r['price']} EUR (Artiste : {r['artist_name']})" for r in rows]
     return title + "\n" + "\n".join(lines)
 
 def handle_dynamic(intent, entities, user_name, lang):
     try:
         if intent == 'search_products':
             rows = query_products("1=1 ORDER BY id DESC")
-            return format_products(rows, "🎨 Produits disponibles :", "🎨 Available products:", lang)
+            return format_products(rows, "Produits disponibles :", "Available products:", lang)
 
         elif intent == 'search_paintings':
             rows = query_products("type = 'Painting'")
-            return format_products(rows, "🖼️ Peintures disponibles :", "🖼️ Available paintings:", lang)
+            return format_products(rows, "Peintures disponibles :", "Available paintings:", lang)
 
         elif intent == 'search_sculptures':
             rows = query_products("type = 'Sculpture'")
-            return format_products(rows, "🗿 Sculptures disponibles :", "🗿 Available sculptures:", lang)
+            return format_products(rows, "Sculptures disponibles :", "Available sculptures:", lang)
 
         elif intent == 'search_digital':
             rows = query_products("type = 'Digital Art'")
-            return format_products(rows, "💻 Art numérique disponible :", "💻 Available digital art:", lang)
+            return format_products(rows, "Art numérique disponible :", "Available digital art:", lang)
 
         elif intent == 'search_photography':
             rows = query_products("type = 'Photography'")
-            return format_products(rows, "📸 Photographies disponibles :", "📸 Available photography:", lang)
+            return format_products(rows, "Photographies disponibles :", "Available photography:", lang)
 
         elif intent == 'search_drawings':
             rows = query_products("type = 'Drawing'")
-            return format_products(rows, "✏️ Dessins disponibles :", "✏️ Available drawings:", lang)
+            return format_products(rows, "Dessins disponibles :", "Available drawings:", lang)
 
         elif intent == 'search_newest':
             rows = query_products("1=1 ORDER BY id DESC")
-            return format_products(rows, "🌟 Dernières nouveautés :", "🌟 Latest additions:", lang)
+            return format_products(rows, "Dernières nouveautés :", "Latest additions:", lang)
 
         elif intent == 'search_by_price_cheap':
             max_p = entities.get('max_price', 500)
             rows = query_products("price <= %s ORDER BY price ASC", (max_p,))
-            return format_products(rows, f"💰 Art à moins de {max_p}€ :", f"💰 Art under {max_p}€:", lang)
+            return format_products(rows, f"Art à moins de {max_p} EUR :", f"Art under {max_p} EUR:", lang)
 
         elif intent == 'search_by_price_expensive':
             min_p = entities.get('min_price', 1000)
             rows = query_products("price >= %s ORDER BY price DESC", (min_p,))
-            return format_products(rows, f"💎 Art premium (>{min_p}€) :", f"💎 Premium art (>{min_p}€):", lang)
+            return format_products(rows, f"Art premium (plus de {min_p} EUR) :", f"Premium art (over {min_p} EUR):", lang)
 
         elif intent == 'search_by_artist':
             name = entities.get('artist_name', '')
             if name:
                 rows = query_products("artist_name LIKE %s", (f'%{name}%',))
-                return format_products(rows, f"👨‍🎨 Oeuvres de {name} :", f"👨‍🎨 Art by {name}:", lang)
-            return "Précisez le nom de l'artiste. / Please specify the artist name." if lang == 'fr' else "Please specify the artist name. / Précisez le nom de l'artiste."
+                return format_products(rows, f"Oeuvres de {name} :", f"Art by {name}:", lang)
+            return "Veuillez préciser le nom de l'artiste."
 
         elif intent == 'search_by_category':
             cat = entities.get('category', '')
             if cat:
                 rows = query_products("category = %s", (cat,))
-                return format_products(rows, f"🏷️ Art {cat} :", f"🏷️ {cat} art:", lang)
-            return "Catégories : Abstract, Landscape, Portrait, Still Life, Modern, Classical, Impressionist, Pop Art, Minimalist, Surrealist"
+                return format_products(rows, f"Art catégorie {cat} :", f"{cat} art:", lang)
+            return "Catégories disponibles : Abstract, Landscape, Portrait, Still Life, Modern, Classical, Impressionist, Pop Art, Minimalist, Surrealist"
 
         elif intent == 'view_auctions':
             rows = query_products("sale_type = 'auction' ORDER BY auction_end_time ASC")
             if not rows:
-                return "Aucune enchère en cours. / No active auctions." if lang == 'fr' else "No active auctions. / Aucune enchère en cours."
-            lines = [f"• {r['name']} — {r['price']} € (par {r['artist_name']})" for r in rows]
-            t = "🔨 Enchères en cours :" if lang == 'fr' else "🔨 Active auctions:"
-            return t + "\n" + "\n".join(lines)
+                return "Aucune enchère en cours."
+            lines = [f"- {r['name']} : {r['price']} EUR (Artiste : {r['artist_name']})" for r in rows]
+            return "Enchères en cours :\n" + "\n".join(lines)
 
         elif intent == 'order_history':
             try:
@@ -338,17 +343,15 @@ def handle_dynamic(intent, entities, user_name, lang):
                 rows = cur.fetchall()
                 conn.close()
                 if rows:
-                    lines = [f"• {r['name']} — {r['price']} € ({r['order_type']})" for r in rows]
-                    t = "📦 Vos dernières commandes :" if lang == 'fr' else "📦 Your recent orders:"
-                    return t + "\n" + "\n".join(lines)
-                return ("Vous n'avez pas encore de commandes.\nYou don't have any orders yet." if lang == 'fr'
-                        else "You don't have any orders yet.\nVous n'avez pas encore de commandes.")
+                    lines = [f"- {r['name']} : {r['price']} EUR ({r['order_type']})" for r in rows]
+                    return "Vos dernières commandes :\n" + "\n".join(lines)
+                return "Vous n'avez pas encore de commandes."
             except:
-                return "Consultez l'onglet Commandes. / Check the Orders tab."
+                return "Consultez l'onglet Commandes."
 
         elif intent == 'recommend':
             rows = query_products("1=1 ORDER BY RAND()")
-            return format_products(rows, "💡 Nos recommandations :", "💡 Our recommendations:", lang)
+            return format_products(rows, "Nos recommandations :", "Our recommendations:", lang)
 
         elif intent == 'wishlist_view':
             try:
@@ -358,21 +361,17 @@ def handle_dynamic(intent, entities, user_name, lang):
                 rows = cur.fetchall()
                 conn.close()
                 if rows:
-                    lines = [f"• {r['name']} — {r['price']} €" for r in rows]
-                    t = "❤️ Votre liste de souhaits :" if lang == 'fr' else "❤️ Your wishlist:"
-                    return t + "\n" + "\n".join(lines)
-                return ("Votre liste de souhaits est vide.\nAllez dans le catalogue et cliquez '♥ Souhait'." if lang == 'fr'
-                        else "Your wishlist is empty.\nBrowse the catalogue and click '♥ Souhait'.")
+                    lines = [f"- {r['name']} : {r['price']} EUR" for r in rows]
+                    return "Votre liste de souhaits :\n" + "\n".join(lines)
+                return "Votre liste de souhaits est vide."
             except:
-                return "Consultez 'LISTE DE SOUHAITS' dans le menu. / Check 'LISTE DE SOUHAITS' in the sidebar."
+                return "Consultez 'LISTE DE SOUHAITS' dans le menu."
 
         elif intent == 'cart_view':
-            return ("🛒 Le marketplace utilise l'achat direct.\nCliquez '🛒 Acheter' sur un produit pour l'acheter.\n\n"
-                    "The marketplace uses direct purchase.\nClick '🛒 Acheter' on a product to buy it.")
+            return "Le marketplace utilise l'achat direct. Cliquez sur 'Acheter' sur un produit pour commander."
 
         elif intent == 'track_order':
-            return ("📦 Pour suivre votre commande, consultez vos commandes.\nL'artiste vous contactera pour la livraison.\n\n"
-                    "To track your order, check your orders.\nThe artist will contact you for delivery.")
+            return "Pour suivre votre commande, consultez vos achats. L'artiste vous contactera pour la livraison."
 
         elif intent == 'compare_prices':
             try:
@@ -383,16 +382,16 @@ def handle_dynamic(intent, entities, user_name, lang):
                 cur.execute("SELECT name, price, type FROM product WHERE status != 'sold' ORDER BY price DESC LIMIT 3")
                 exp = cur.fetchall()
                 conn.close()
-                lines = ["💰 Les moins chers / Cheapest:"] + [f"  • {r['name']} — {r['price']} €" for r in cheap]
-                lines += ["", "💎 Les plus chers / Most expensive:"] + [f"  • {r['name']} — {r['price']} €" for r in exp]
+                lines = ["Les moins chers :"] + [f"  - {r['name']} : {r['price']} EUR" for r in cheap]
+                lines += ["", "Les plus chers :"] + [f"  - {r['name']} : {r['price']} EUR" for r in exp]
                 return "\n".join(lines)
             except:
-                return "Parcourez le catalogue et utilisez le tri par prix. / Browse catalogue and use price sorting."
+                return "Parcourez le catalogue et utilisez le tri par prix."
 
         elif intent == 'budget_recommend':
             max_p = entities.get('max_price', 500)
             rows = query_products("price <= %s ORDER BY price DESC", (max_p,))
-            return format_products(rows, f"🎯 Meilleurs choix sous {max_p}€ :", f"🎯 Best picks under {max_p}€:", lang)
+            return format_products(rows, f"Meilleurs choix sous {max_p} EUR :", f"Best picks under {max_p} EUR:", lang)
 
     except Exception as e:
         pass
@@ -455,14 +454,7 @@ def main():
         result["response"] = response_template.replace("{user_name}", user_name)
 
     if not result.get("response"):
-        if lang == 'fr':
-            result["response"] = (f"Je ne suis pas sûr de comprendre, {user_name}.\n"
-                "Essayez : 'aide', 'voir les produits', 'mes commandes', 'enchères'.\n\n"
-                f"I'm not sure I understand, {user_name}.\nTry: 'help', 'show products', 'my orders', 'auctions'.")
-        else:
-            result["response"] = (f"I'm not sure I understand, {user_name}.\n"
-                "Try: 'help', 'show products', 'my orders', 'auctions'.\n\n"
-                f"Essayez : 'aide', 'voir les produits', 'mes commandes', 'enchères'.")
+        result["response"] = "Désolée, je ne peux pas vous répondre."
 
     print(json.dumps(result, ensure_ascii=True))
 

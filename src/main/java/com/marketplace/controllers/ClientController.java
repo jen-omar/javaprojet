@@ -1,16 +1,31 @@
 package com.marketplace.controllers;
 
+import com.marketplace.models.Bid;
 import com.marketplace.models.Order;
 import com.marketplace.models.Product;
 import com.marketplace.models.Review;
 import com.marketplace.models.Wishlist;
+import com.marketplace.services.BidService;
+import com.marketplace.services.ChatbotService;
+import com.marketplace.services.InvoiceService;
+import com.marketplace.services.InvoiceService;
 import com.marketplace.services.OrderService;
 import com.marketplace.services.ProductService;
+import com.marketplace.services.QuizService;
 import com.marketplace.services.ReviewService;
+import com.marketplace.services.VoiceService;
 import com.marketplace.services.WishlistService;
 import com.marketplace.services.PaymentServer;
 import com.marketplace.services.StripeService;
 import com.marketplace.util.SessionManager;
+
+import javafx.animation.TranslateTransition;
+import javafx.animation.ParallelTransition;
+import javafx.animation.FadeTransition;
+import javafx.util.Duration;
+import java.util.Random;
+
+import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
@@ -22,12 +37,6 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-
-import java.math.BigDecimal;
-import java.util.List;
-import com.marketplace.models.Bid;
-import com.marketplace.services.BidService;
-import java.util.stream.Collectors;
 import javafx.scene.PerspectiveCamera;
 import javafx.scene.Group;
 import javafx.scene.SceneAntialiasing;
@@ -38,6 +47,10 @@ import javafx.scene.shape.Box;
 import javafx.scene.transform.Rotate;
 import javafx.scene.AmbientLight;
 import javafx.scene.PointLight;
+
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * ClientController — vue Client:
@@ -52,6 +65,9 @@ public class ClientController {
     private final ReviewService reviewService = new ReviewService();
     private final WishlistService wishlistService = new WishlistService();
     private final BidService bidService = new BidService();
+    private final InvoiceService invoiceService = new InvoiceService();
+    private final VoiceService voiceService = new VoiceService();
+    private final QuizService quizService = new QuizService();
     private final SessionManager session = SessionManager.getInstance();
 
     private FlowPane cards;
@@ -66,12 +82,13 @@ public class ClientController {
 
         // ── Header ──────────────────────────────────────────────────
         VBox headerBox = new VBox(4);
-        headerBox.setPadding(new Insets(28, 32, 0, 32));
+        headerBox.setPadding(new Insets(35, 40, 25, 40));
+        headerBox.setStyle("-fx-background-color: linear-gradient(to bottom, #222, #1a1a1a);");
 
-        Label title = new Label("CATALOGUE");
-        title.setStyle("-fx-text-fill: #ffffff; -fx-font-size: 22; -fx-font-weight: bold;");
-        Label sub = new Label("Bonjour " + session.getName() + " ! Parcourez et achetez vos œuvres préférées.");
-        sub.setStyle("-fx-text-fill: #666; -fx-font-size: 12;");
+        Label title = new Label("CATALOGUE D'ART");
+        title.setStyle("-fx-text-fill: #c0c0c0; -fx-font-size: 26; -fx-font-weight: 900; -fx-font-family: 'Segoe UI Black';");
+        Label sub = new Label("Explorez la collection Mythoria — Artistes : " + session.getName());
+        sub.setStyle("-fx-text-fill: #888; -fx-font-size: 13; -fx-letter-spacing: 1px;");
         headerBox.getChildren().addAll(title, sub);
 
         // ── Search + Filter bar ─────────────────────────────────────
@@ -104,7 +121,27 @@ public class ClientController {
         sortOrder.setButtonCell(darkCell());
         sortOrder.setOnAction(e -> refreshCards());
 
-        HBox toolbar = new HBox(12, searchField, filterType, sortOrder);
+        // --- Voice Search Button ---
+        Button voiceBtn = new Button("🎤");
+        voiceBtn.setStyle("-fx-background-color: #2a2a2a; -fx-text-fill: #c9a84c; -fx-font-size: 16; " +
+                "-fx-border-color: #444; -fx-border-radius: 6; -fx-background-radius: 6; -fx-cursor: hand;");
+        voiceBtn.setTooltip(new Tooltip("Recherche Vocale"));
+        voiceBtn.setOnAction(e -> {
+            voiceBtn.setStyle("-fx-background-color: #3a1a1a; -fx-text-fill: #ff6b6b; -fx-border-color: #ff6b6b;");
+            voiceBtn.setText("⏳");
+            voiceService.listenAsync().thenAccept(text -> Platform.runLater(() -> {
+                voiceBtn.setStyle("-fx-background-color: #2a2a2a; -fx-text-fill: #c9a84c; -fx-border-color: #444;");
+                voiceBtn.setText("🎤");
+                if (text != null && !text.equals("UNKNOWN") && !text.equals("TIMEOUT") && !text.startsWith("ERROR")) {
+                    searchField.setText(text);
+                    refreshCards();
+                } else if (text != null && text.startsWith("ERROR")) {
+                    System.err.println("Voice Error: " + text);
+                }
+            }));
+        });
+
+        HBox toolbar = new HBox(12, searchField, voiceBtn, filterType, sortOrder);
         toolbar.setAlignment(Pos.CENTER_LEFT);
         toolbar.setPadding(new Insets(16, 32, 8, 32));
         HBox.setHgrow(searchField, Priority.SOMETIMES);
@@ -127,70 +164,96 @@ public class ClientController {
         StackPane stack = new StackPane(scroll);
 
         // Chat Button
-        Button chatBtn = new Button("💬");
+        Button chatBtn = new Button("MYTHORIA");
         chatBtn.setStyle(
-                "-fx-background-color: #c0c0c0; -fx-text-fill: #1a1a1a; -fx-font-size: 24; -fx-background-radius: 50; -fx-cursor: hand;");
-        chatBtn.setPrefSize(60, 60);
-        chatBtn.setMinSize(60, 60);
+                "-fx-background-color: linear-gradient(to bottom right, #c9a84c, #8e732a); " +
+                "-fx-text-fill: #1a1a1a; -fx-font-weight: 900; -fx-font-size: 13; " +
+                "-fx-background-radius: 25; -fx-cursor: hand; -fx-padding: 12 25; " +
+                "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.4), 10, 0, 0, 5); " +
+                "-fx-font-family: 'Segoe UI Black';");
+        
         StackPane.setAlignment(chatBtn, Pos.BOTTOM_RIGHT);
         StackPane.setMargin(chatBtn, new Insets(0, 30, 30, 0));
 
         // Chat Window
         VBox chatWindow = new VBox(0);
-        chatWindow.setMaxSize(350, 450);
+        chatWindow.setMaxSize(380, 520);
         chatWindow.setStyle(
-                "-fx-background-color: #222; -fx-border-color: #444; -fx-border-width: 1; -fx-border-radius: 8; -fx-background-radius: 8;");
+                "-fx-background-color: rgba(26, 26, 26, 0.95); " +
+                "-fx-border-color: rgba(201, 168, 76, 0.3); " +
+                "-fx-border-width: 1; -fx-border-radius: 20; " +
+                "-fx-background-radius: 20; " +
+                "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.6), 20, 0, 0, 10);");
         StackPane.setAlignment(chatWindow, Pos.BOTTOM_RIGHT);
-        StackPane.setMargin(chatWindow, new Insets(0, 30, 100, 0));
+        StackPane.setMargin(chatWindow, new Insets(0, 30, 110, 0));
         chatWindow.setVisible(false);
 
         // Header
         HBox chatHeader = new HBox();
-        chatHeader.setPadding(new Insets(10, 15, 10, 15));
-        chatHeader.setStyle("-fx-background-color: #c0c0c0; -fx-background-radius: 7 7 0 0;");
+        chatHeader.setAlignment(Pos.CENTER_LEFT);
+        chatHeader.setPadding(new Insets(15, 20, 15, 20));
+        chatHeader.setStyle("-fx-background-color: linear-gradient(to right, #c9a84c, #8e732a); -fx-background-radius: 19 19 0 0;");
+        
+        VBox titleContainer = new VBox(2);
         Label chatTitle = new Label("MYTHORIA ASSISTANT");
-        chatTitle.setStyle("-fx-text-fill: #1a1a1a; -fx-font-weight: bold; -fx-font-size: 14;");
+        chatTitle.setStyle("-fx-text-fill: #1a1a1a; -fx-font-weight: bold; -fx-font-size: 15; -fx-font-family: 'Segoe UI';");
+        Label statusLabel = new Label("En ligne");
+        statusLabel.setStyle("-fx-text-fill: #1a3a1a; -fx-font-size: 10; -fx-font-weight: bold;");
+        titleContainer.getChildren().addAll(chatTitle, statusLabel);
+
         Region spacerHeader = new Region();
         HBox.setHgrow(spacerHeader, Priority.ALWAYS);
         Button closeChatBtn = new Button("✕");
         closeChatBtn.setStyle(
-                "-fx-background-color: transparent; -fx-text-fill: #1a1a1a; -fx-cursor: hand; -fx-font-size: 14; -fx-font-weight: bold;");
+                "-fx-background-color: rgba(0,0,0,0.1); -fx-text-fill: #1a1a1a; -fx-cursor: hand; " +
+                "-fx-font-size: 14; -fx-font-weight: bold; -fx-background-radius: 15; -fx-padding: 5 10;");
         closeChatBtn.setOnAction(e -> chatWindow.setVisible(false));
-        chatHeader.getChildren().addAll(chatTitle, spacerHeader, closeChatBtn);
+        chatHeader.getChildren().addAll(titleContainer, spacerHeader, closeChatBtn);
 
         // Messages area
-        VBox messagesBox = new VBox(10);
-        messagesBox.setPadding(new Insets(15));
-        messagesBox.setStyle("-fx-background-color: #1a1a1a;");
+        VBox messagesBox = new VBox(15);
+        messagesBox.setPadding(new Insets(20));
+        messagesBox.setStyle("-fx-background-color: transparent;");
         ScrollPane chatScroll = new ScrollPane(messagesBox);
         chatScroll.setFitToWidth(true);
-        chatScroll.setStyle("-fx-background: #1a1a1a; -fx-background-color: #1a1a1a; -fx-border-color: transparent;");
+        chatScroll.setStyle("-fx-background: transparent; -fx-background-color: transparent; -fx-border-color: transparent;");
         VBox.setVgrow(chatScroll, Priority.ALWAYS);
+        chatScroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
 
         // Input area
-        HBox inputArea = new HBox(8);
-        inputArea.setPadding(new Insets(10));
-        inputArea.setStyle(
-                "-fx-background-color: #222; -fx-border-color: #333; -fx-border-width: 1 0 0 0; -fx-background-radius: 0 0 7 7;");
+        HBox inputArea = new HBox(10);
+        inputArea.setAlignment(Pos.CENTER);
+        inputArea.setPadding(new Insets(15, 20, 20, 20));
+        inputArea.setStyle("-fx-background-color: transparent;");
+        
         TextField chatInput = new TextField();
         chatInput.setPromptText("Écrivez votre message...");
         chatInput.setStyle(
-                "-fx-background-color: #333; -fx-text-fill: #fff; -fx-prompt-text-fill: #888; -fx-background-radius: 15; -fx-padding: 8 15;");
+                "-fx-background-color: #2a2a2a; -fx-text-fill: #fff; -fx-prompt-text-fill: #666; " +
+                "-fx-background-radius: 25; -fx-padding: 12 20; -fx-border-color: #444; -fx-border-radius: 25;");
         HBox.setHgrow(chatInput, Priority.ALWAYS);
+        
         Button sendBtn = new Button("➤");
+        sendBtn.setPrefSize(45, 45);
+        sendBtn.setMinSize(45, 45);
         sendBtn.setStyle(
-                "-fx-background-color: #c0c0c0; -fx-text-fill: #1a1a1a; -fx-background-radius: 15; -fx-cursor: hand; -fx-font-weight: bold;");
+                "-fx-background-color: linear-gradient(to bottom right, #c9a84c, #8e732a); " +
+                "-fx-text-fill: #1a1a1a; -fx-background-radius: 25; -fx-cursor: hand; " +
+                "-fx-font-weight: bold; -fx-font-size: 16;");
 
         // Add intro message
-        Label intro = new Label("Bonjour " + session.getName() + " ! Comment puis-je vous aider ?");
+        Label intro = new Label("Bonjour " + session.getName() + " ! Comment puis-je vous aider aujourd'hui ?");
         intro.setWrapText(true);
+        intro.setMaxWidth(260);
         intro.setStyle(
-                "-fx-background-color: #333; -fx-text-fill: #fff; -fx-padding: 8 12; -fx-background-radius: 12 12 12 0;");
+                "-fx-background-color: #2a2a2a; -fx-text-fill: #ddd; -fx-padding: 12 16; " +
+                "-fx-background-radius: 0 20 20 20; -fx-font-size: 13; " +
+                "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 5, 0, 0, 2);");
         HBox introRow = new HBox(intro);
         introRow.setAlignment(Pos.CENTER_LEFT);
         messagesBox.getChildren().add(introRow);
 
-        com.marketplace.services.ChatbotService botService = new com.marketplace.services.ChatbotService();
+        ChatbotService botService = new ChatbotService();
 
         Runnable sendMessage = () -> {
             String text = chatInput.getText().trim();
@@ -200,8 +263,11 @@ public class ClientController {
             // User msg
             Label uMsg = new Label(text);
             uMsg.setWrapText(true);
+            uMsg.setMaxWidth(260);
             uMsg.setStyle(
-                    "-fx-background-color: #c0c0c0; -fx-text-fill: #1a1a1a; -fx-padding: 8 12; -fx-background-radius: 12 12 0 12;");
+                    "-fx-background-color: #c9a84c; -fx-text-fill: #1a1a1a; -fx-padding: 12 16; " +
+                    "-fx-background-radius: 20 20 0 20; -fx-font-size: 13; -fx-font-weight: 500; " +
+                    "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 5, 0, 0, 2);");
             HBox uRow = new HBox(uMsg);
             uRow.setAlignment(Pos.CENTER_RIGHT);
             messagesBox.getChildren().add(uRow);
@@ -220,57 +286,121 @@ public class ClientController {
                 String reply = result[0];
                 String intent = result[1];
 
-                javafx.application.Platform.runLater(() -> {
+                Platform.runLater(() -> {
                     messagesBox.getChildren().remove(tRow);
+                    
+                    VBox bContainer = new VBox(5);
+                    bContainer.setAlignment(Pos.CENTER_LEFT);
+                    
+                    Label nameTag = new Label("Mythoria Assistant");
+                    nameTag.setStyle("-fx-text-fill: #8e732a; -fx-font-size: 9; -fx-font-weight: bold; -fx-padding: 0 0 0 5;");
+                    
                     Label bMsg = new Label(reply);
                     bMsg.setWrapText(true);
+                    bMsg.setMaxWidth(280);
                     bMsg.setStyle(
-                            "-fx-background-color: #333; -fx-text-fill: #fff; -fx-padding: 8 12; -fx-background-radius: 12 12 12 0;");
-                    HBox bRow = new HBox(bMsg);
+                            "-fx-background-color: #2a2a2a; -fx-text-fill: #eee; -fx-padding: 14 18; " +
+                            "-fx-background-radius: 0 20 20 20; -fx-font-size: 13.5; -fx-line-spacing: 2; " +
+                            "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 8, 0, 0, 4); " +
+                            "-fx-border-color: rgba(201, 168, 76, 0.1); -fx-border-radius: 0 20 20 20;");
+                    
+                    bContainer.getChildren().addAll(nameTag, bMsg);
+                    HBox bRow = new HBox(bContainer);
                     bRow.setAlignment(Pos.CENTER_LEFT);
                     messagesBox.getChildren().add(bRow);
                     chatScroll.setVvalue(1.0); // scroll to bottom
-
-                    // Dynamic Catalogue Actions have been removed
-                    // The AI now queries the DB directly and responds with text.
                 });
             }).start();
         };
-
-        // Quick Replies Area
-        FlowPane quickReplies = new FlowPane();
-        quickReplies.setHgap(8);
-        quickReplies.setVgap(8);
-        quickReplies.setPadding(new Insets(10, 15, 0, 15));
-        quickReplies.setStyle("-fx-background-color: #222;");
-
-        String[] quickOptions = { "🎨 Montrer peintures", "🛒 Mes commandes", "🌟 Nouveautés", "❓ Aide" };
-        for (String opt : quickOptions) {
-            Button chip = new Button(opt);
-            chip.setStyle(
-                    "-fx-background-color: transparent; -fx-text-fill: #c0c0c0; -fx-border-color: #555; -fx-border-radius: 12; -fx-cursor: hand; -fx-font-size: 11;");
-            chip.setOnMouseEntered(e -> chip.setStyle(
-                    "-fx-background-color: #333; -fx-text-fill: #fff; -fx-border-color: #777; -fx-border-radius: 12; -fx-cursor: hand; -fx-font-size: 11;"));
-            chip.setOnMouseExited(e -> chip.setStyle(
-                    "-fx-background-color: transparent; -fx-text-fill: #c0c0c0; -fx-border-color: #555; -fx-border-radius: 12; -fx-cursor: hand; -fx-font-size: 11;"));
-            chip.setOnAction(e -> {
-                chatInput.setText(opt);
-                sendMessage.run();
-            });
-            quickReplies.getChildren().add(chip);
-        }
 
         sendBtn.setOnAction(e -> sendMessage.run());
         chatInput.setOnAction(e -> sendMessage.run());
 
         inputArea.getChildren().addAll(chatInput, sendBtn);
-        chatWindow.getChildren().addAll(chatHeader, chatScroll, quickReplies, inputArea);
+        chatWindow.getChildren().addAll(chatHeader, chatScroll, inputArea);
 
         chatBtn.setOnAction(e -> chatWindow.setVisible(!chatWindow.isVisible()));
 
         stack.getChildren().addAll(chatBtn, chatWindow);
 
+        // --- Gamified Quiz Logic ---
+        // if (!quizService.hasAlreadyWon()) {
+            VBox quizCard = createQuizUI(stack);
+            stack.getChildren().add(quizCard);
+            StackPane.setAlignment(quizCard, Pos.BOTTOM_LEFT);
+            StackPane.setMargin(quizCard, new Insets(0, 0, 30, 30));
+        // }
+
         return stack;
+    }
+
+    private VBox createQuizUI(StackPane mainContainer) {
+        VBox quizCard = new VBox(10);
+        quizCard.setMaxSize(300, 200);
+        quizCard.setPadding(new Insets(20));
+        quizCard.setStyle(
+                "-fx-background-color: rgba(30, 30, 30, 0.9); -fx-background-radius: 20; " +
+                "-fx-border-color: rgba(201, 168, 76, 0.5); -fx-border-width: 1.5; " +
+                "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.5), 15, 0, 0, 10);");
+
+        Label quizHeader = new Label("🎨 QUIZ POUR " + session.getName().toUpperCase());
+        quizHeader.setStyle("-fx-text-fill: #c9a84c; -fx-font-weight: bold; -fx-font-size: 14;");
+
+        Label question = new Label("Quel peintre néerlandais est célèbre pour sa 'Nuit Étoilée' ?");
+        question.setWrapText(true);
+        question.setStyle("-fx-text-fill: white; -fx-font-size: 12;");
+
+        TextField quizInput = new TextField();
+        quizInput.setPromptText("Votre réponse...");
+        quizInput.setStyle("-fx-background-color: #222; -fx-text-fill: white; -fx-border-color: #444; -fx-border-radius: 5;");
+
+        Button submitQuiz = new Button("Vérifier");
+        submitQuiz.setStyle("-fx-background-color: #c9a84c; -fx-text-fill: black; -fx-font-weight: bold; -fx-cursor: hand;");
+        submitQuiz.setPrefWidth(Double.MAX_VALUE);
+
+        submitQuiz.setOnAction(e -> {
+            String ans = quizInput.getText().trim();
+            if ("van gogh".equalsIgnoreCase(ans)) {
+                triggerConfetti(mainContainer);
+                quizService.markAsWon();
+                
+                quizCard.getChildren().clear();
+                Label success = new Label("BRAVO ! 🎉");
+                success.setStyle("-fx-text-fill: #7ec97e; -fx-font-weight: bold; -fx-font-size: 18;");
+                Label code = new Label("Code Promo : MYTHORIA2026");
+                code.setStyle("-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14;");
+                Button close = new Button("Fermer");
+                close.setOnAction(ev -> mainContainer.getChildren().remove(quizCard));
+                quizCard.getChildren().addAll(success, code, close);
+            } else {
+                quizInput.setStyle("-fx-background-color: #222; -fx-text-fill: white; -fx-border-color: #ff6b6b; -fx-border-radius: 5;");
+            }
+        });
+
+        quizCard.getChildren().addAll(quizHeader, question, quizInput, submitQuiz);
+        return quizCard;
+    }
+
+    private void triggerConfetti(StackPane container) {
+        Random rnd = new Random();
+        for (int i = 0; i < 50; i++) {
+            javafx.scene.shape.Rectangle c = new javafx.scene.shape.Rectangle(rnd.nextInt(5, 10), rnd.nextInt(5, 10));
+            c.setFill(Color.hsb(rnd.nextDouble() * 360, 0.8, 0.9));
+            c.setTranslateX(rnd.nextInt((int) container.getWidth()));
+            c.setTranslateY(-20);
+            container.getChildren().add(c);
+
+            TranslateTransition tt = new TranslateTransition(Duration.seconds(2 + rnd.nextDouble() * 2), c);
+            tt.setToY(container.getHeight() + 20);
+            tt.setToX(c.getTranslateX() + rnd.nextInt(-50, 50));
+            
+            FadeTransition ft = new FadeTransition(Duration.seconds(2 + rnd.nextDouble() * 2), c);
+            ft.setToValue(0);
+
+            ParallelTransition pt = new ParallelTransition(tt, ft);
+            pt.setOnFinished(e -> container.getChildren().remove(c));
+            pt.play();
+        }
     }
 
     // ── Refresh with search + filter + sort ─────────────────────
@@ -313,157 +443,95 @@ public class ClientController {
     // ── Product card (client view) ────────────────────────────────
     private Node buildCard(Product p) {
         VBox card = new VBox(0);
-        card.setPrefWidth(270);
+        card.setPrefWidth(280);
         card.setStyle(
-                "-fx-background-color: #222; -fx-background-radius: 12; " +
-                        "-fx-border-color: #2e2e2e; -fx-border-radius: 12; -fx-border-width: 1;");
+                "-fx-background-color: #222; -fx-background-radius: 18; " +
+                "-fx-border-color: #333; -fx-border-radius: 18; -fx-border-width: 1; " +
+                "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 10, 0, 0, 5);");
 
         // Hover effect
         card.setOnMouseEntered(e -> card.setStyle(
-                "-fx-background-color: #252525; -fx-background-radius: 12; " +
-                        "-fx-border-color: #c0c0c0; -fx-border-radius: 12; -fx-border-width: 1;"));
+                "-fx-background-color: #282828; -fx-background-radius: 18; " +
+                "-fx-border-color: #c0c0c0; -fx-border-radius: 18; -fx-border-width: 1; " +
+                "-fx-effect: dropshadow(three-pass-box, rgba(192,192,192,0.2), 15, 0, 0, 8);"));
         card.setOnMouseExited(e -> card.setStyle(
-                "-fx-background-color: #222; -fx-background-radius: 12; " +
-                        "-fx-border-color: #2e2e2e; -fx-border-radius: 12; -fx-border-width: 1;"));
+                "-fx-background-color: #222; -fx-background-radius: 18; " +
+                "-fx-border-color: #333; -fx-border-radius: 18; -fx-border-width: 1; " +
+                "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 10, 0, 0, 5);"));
 
-        // Image — clickable to open 3D museum view
+        // Image
         String rawUrl = p.getImageUrl();
+        Node imgNode;
         if (rawUrl != null && !rawUrl.isBlank()) {
             try {
-                String url = rawUrl.startsWith("http") || rawUrl.startsWith("file:") ? rawUrl
-                        : "http://localhost" + rawUrl;
-                Image img = new Image(url, 270, 150, false, true, true);
+                String url = rawUrl.startsWith("http") || rawUrl.startsWith("file:") ? rawUrl : "http://localhost" + rawUrl;
+                Image img = new Image(url, 280, 160, false, true, true);
                 ImageView iv = new ImageView(img);
-                iv.setFitWidth(270);
-                iv.setFitHeight(150);
+                iv.setFitWidth(280);
+                iv.setFitHeight(160);
                 iv.setPreserveRatio(false);
-                iv.setStyle("-fx-background-radius: 12 12 0 0;");
+                iv.setClip(new javafx.scene.shape.Rectangle(280, 160) {{ setArcWidth(36); setArcHeight(36); }});
                 iv.setCursor(Cursor.HAND);
                 iv.setOnMouseClicked(e -> show3DMuseumView(p));
-                img.errorProperty().addListener((obs, old, err) -> {
-                    if (err)
-                        card.getChildren().remove(iv);
-                });
-                card.getChildren().add(iv);
-            } catch (Exception ignored) {
-            }
+                imgNode = iv;
+            } catch (Exception ignored) { imgNode = new Region(); }
         } else {
-            // No-image placeholder — also clickable
-            StackPane placeholder = new StackPane();
-            placeholder.setPrefSize(270, 150);
-            placeholder.setStyle("-fx-background-color: #2a2a2a; -fx-background-radius: 12 12 0 0;");
-            Label noImg = new Label("🖼  Pas de photo");
-            noImg.setStyle("-fx-text-fill: #555; -fx-font-size: 13;");
-            placeholder.getChildren().add(noImg);
+            StackPane placeholder = new StackPane(new Label("🖼  Pas de photo"));
+            placeholder.setPrefSize(280, 160);
+            placeholder.setStyle("-fx-background-color: #2a2a2a; -fx-background-radius: 18 18 0 0;");
             placeholder.setCursor(Cursor.HAND);
             placeholder.setOnMouseClicked(e -> show3DMuseumView(p));
-            card.getChildren().add(placeholder);
+            imgNode = placeholder;
         }
 
-        // Content
-        VBox content = new VBox(8);
-        content.setPadding(new Insets(14, 16, 16, 16));
+        VBox content = new VBox(10);
+        content.setPadding(new Insets(18, 20, 20, 20));
 
         Label name = new Label(p.getName());
-        name.setStyle("-fx-text-fill: #ffffff; -fx-font-weight: bold; -fx-font-size: 14; -fx-cursor: hand;");
+        name.setStyle("-fx-text-fill: #ffffff; -fx-font-weight: 900; -fx-font-size: 16; -fx-font-family: 'Segoe UI';");
         name.setWrapText(true);
-        name.setOnMouseClicked(e -> show3DMuseumView(p));
 
         Label artist = new Label("par " + (p.getArtistName() != null ? p.getArtistName() : "—"));
-        artist.setStyle("-fx-text-fill: #777; -fx-font-size: 11;");
+        artist.setStyle("-fx-text-fill: #888; -fx-font-size: 12; -fx-font-style: italic;");
 
         Label price = new Label(p.getPrice() != null ? p.getPrice().toPlainString() + " €" : "—");
-        price.setStyle("-fx-text-fill: #c0c0c0; -fx-font-size: 18; -fx-font-weight: bold;");
+        price.setStyle("-fx-text-fill: #c0c0c0; -fx-font-size: 20; -fx-font-weight: 900;");
 
-        String d = p.getDescription() != null && !p.getDescription().isBlank()
-                ? p.getDescription()
-                : "Aucune description.";
-        Label desc = new Label(d.length() > 70 ? d.substring(0, 70) + "…" : d);
-        desc.setStyle("-fx-text-fill: #666; -fx-font-size: 11;");
-        desc.setWrapText(true);
-
-        HBox tags = new HBox(6);
+        HBox tags = new HBox(8);
         tags.getChildren().addAll(miniTag(p.getType()), miniTag(p.getSaleType()));
 
-        // Action button
-        Button actionBtn;
-        if ("auction".equalsIgnoreCase(p.getSaleType())) {
-            actionBtn = new Button("⚡  Enchérir");
-            actionBtn.setOnAction(e -> showBidDialog(p));
-        } else {
-            actionBtn = new Button("🛒  Acheter");
-            actionBtn.setOnAction(e -> showBuyDialog(p));
-        }
+        Button actionBtn = new Button("auction".equalsIgnoreCase(p.getSaleType()) ? "⚡ ENCHÉRIR" : "🛒 ACHETER");
         actionBtn.setPrefWidth(Double.MAX_VALUE);
-        actionBtn.setStyle(
-                "-fx-background-color: #c0c0c0; -fx-text-fill: #111; -fx-font-weight: bold; " +
-                        "-fx-background-radius: 7; -fx-padding: 9 0; -fx-cursor: hand; -fx-font-size: 13;");
-        actionBtn.setOnMouseEntered(e -> actionBtn.setStyle(
-                "-fx-background-color: #dcdcdc; -fx-text-fill: #111; -fx-font-weight: bold; " +
-                        "-fx-background-radius: 7; -fx-padding: 9 0; -fx-cursor: hand; -fx-font-size: 13;"));
-        actionBtn.setOnMouseExited(e -> actionBtn.setStyle(
-                "-fx-background-color: #c0c0c0; -fx-text-fill: #111; -fx-font-weight: bold; " +
-                        "-fx-background-radius: 7; -fx-padding: 9 0; -fx-cursor: hand; -fx-font-size: 13;"));
+        actionBtn.setStyle("-fx-background-color: #c0c0c0; -fx-text-fill: #1a1a1a; -fx-font-weight: bold; " +
+                "-fx-background-radius: 10; -fx-padding: 10 0; -fx-cursor: hand; -fx-font-size: 13;");
+        actionBtn.setOnAction(e -> {
+            if ("auction".equalsIgnoreCase(p.getSaleType())) showBidDialog(p);
+            else showBuyDialog(p);
+        });
 
-        // ── ♥ Wishlist button ────────────────────────────────────
-        Button wishBtn = new Button("♥  Souhait");
-        boolean alreadyWished = wishlistService.isAlreadyInWishlist(session.getName(), p.getId());
-        if (alreadyWished) {
-            wishBtn.setText("♥  Ajouté");
-            wishBtn.setStyle("-fx-background-color: #3a2a1a; -fx-text-fill: #c0c0c0; " +
-                    "-fx-background-radius: 7; -fx-padding: 7 12; -fx-cursor: default; -fx-font-size: 12; " +
-                    "-fx-border-color: #c0c0c0; -fx-border-radius: 7; -fx-border-width: 1;");
-            wishBtn.setDisable(true);
-        } else {
-            wishBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #c0c0c0; " +
-                    "-fx-border-color: #c0c0c0; -fx-border-radius: 7; -fx-background-radius: 7; " +
-                    "-fx-padding: 7 12; -fx-cursor: hand; -fx-font-size: 12;");
-            wishBtn.setOnMouseEntered(e -> wishBtn.setStyle(
-                    "-fx-background-color: #2a1e0e; -fx-text-fill: #dcdcdc; " +
-                            "-fx-border-color: #dcdcdc; -fx-border-radius: 7; -fx-background-radius: 7; " +
-                            "-fx-padding: 7 12; -fx-cursor: hand; -fx-font-size: 12;"));
-            wishBtn.setOnMouseExited(e -> wishBtn.setStyle(
-                    "-fx-background-color: transparent; -fx-text-fill: #c0c0c0; " +
-                            "-fx-border-color: #c0c0c0; -fx-border-radius: 7; -fx-background-radius: 7; " +
-                            "-fx-padding: 7 12; -fx-cursor: hand; -fx-font-size: 12;"));
-            wishBtn.setOnAction(e -> {
-                Wishlist w = new Wishlist();
-                w.setClientName(session.getName());
-                w.setProductId(p.getId());
-                wishlistService.add(w);
-                wishBtn.setText("♥  Ajouté ✓");
-                wishBtn.setStyle("-fx-background-color: #1a3a1a; -fx-text-fill: #7ec97e; " +
-                        "-fx-border-color: #3a8a3a; -fx-border-radius: 7; -fx-background-radius: 7; " +
-                        "-fx-padding: 7 12; -fx-cursor: default; -fx-font-size: 12;");
-                wishBtn.setDisable(true);
-            });
-        }
-
-        // ── ★ Avis button ────────────────────────────────────────
-        Button avisBtn = new Button("★  Avis");
-        avisBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #aaa; " +
-                "-fx-border-color: #444; -fx-border-radius: 7; -fx-background-radius: 7; " +
-                "-fx-padding: 7 12; -fx-cursor: hand; -fx-font-size: 12;");
-        avisBtn.setOnMouseEntered(e -> avisBtn.setStyle(
-                "-fx-background-color: #2a2a2a; -fx-text-fill: #fff; " +
-                        "-fx-border-color: #666; -fx-border-radius: 7; -fx-background-radius: 7; " +
-                        "-fx-padding: 7 12; -fx-cursor: hand; -fx-font-size: 12;"));
-        avisBtn.setOnMouseExited(e -> avisBtn.setStyle(
-                "-fx-background-color: transparent; -fx-text-fill: #aaa; " +
-                        "-fx-border-color: #444; -fx-border-radius: 7; -fx-background-radius: 7; " +
-                        "-fx-padding: 7 12; -fx-cursor: hand; -fx-font-size: 12;"));
+        Button wishBtn = new Button("♥");
+        wishBtn.setPrefSize(40, 40);
+        wishBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #888; -fx-border-color: #444; -fx-border-radius: 10; -fx-cursor: hand;");
+        wishBtn.setOnAction(e -> {
+            Wishlist w = new Wishlist();
+            w.setClientName(session.getName());
+            w.setProductId(p.getId());
+            wishlistService.add(w);
+            wishBtn.setStyle("-fx-background-color: #333; -fx-text-fill: #7ec97e; -fx-border-color: #7ec97e; -fx-border-radius: 10;");
+        });
+        
+        Button avisBtn = new Button("★");
+        avisBtn.setPrefSize(40, 40);
+        avisBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #888; -fx-border-color: #444; -fx-border-radius: 10; -fx-cursor: hand;");
         avisBtn.setOnAction(e -> showAvisDialog(p));
 
-        // ── Row 2: wish + avis — HGrow splits space, NO MAX_VALUE ─
-        HBox secondRow = new HBox(8, wishBtn, avisBtn);
-        secondRow.setAlignment(Pos.CENTER_LEFT);
-        HBox.setHgrow(wishBtn, Priority.ALWAYS);
-        HBox.setHgrow(avisBtn, Priority.ALWAYS);
-
+        HBox bottomRow = new HBox(12, wishBtn, avisBtn);
+        bottomRow.setAlignment(Pos.CENTER_LEFT);
+        
         Region spacer = new Region();
         VBox.setVgrow(spacer, Priority.ALWAYS);
-        content.getChildren().addAll(name, artist, price, desc, tags, spacer, actionBtn, secondRow);
-        card.getChildren().add(content);
+        content.getChildren().addAll(name, artist, price, tags, spacer, actionBtn, bottomRow);
+        card.getChildren().addAll(imgNode, content);
         return card;
     }
 
@@ -472,62 +540,42 @@ public class ClientController {
         Stage dialog = new Stage();
         dialog.initModality(Modality.APPLICATION_MODAL);
         dialog.setTitle("Enchérir sur : " + p.getName());
-        dialog.setWidth(450);
+        dialog.setWidth(460);
         dialog.setResizable(false);
 
-        VBox layout = new VBox(14);
-        layout.setPadding(new Insets(24, 32, 28, 32));
+        VBox layout = new VBox(20);
+        layout.setPadding(new Insets(35, 40, 35, 40));
         layout.setStyle("-fx-background-color: #1a1a1a;");
 
-        Label title = new Label("Historique des Enchères");
-        title.setStyle("-fx-text-fill: #ffffff; -fx-font-size: 18; -fx-font-weight: bold;");
+        Label title = new Label("HISTORIQUE DES ENCHÈRES");
+        title.setStyle("-fx-text-fill: #c0c0c0; -fx-font-size: 18; -fx-font-weight: 900; -fx-font-family: 'Segoe UI Black';");
 
-        // History view
-        VBox historyBox = new VBox(8);
-        historyBox.setPadding(new Insets(10));
-        historyBox.setStyle(
-                "-fx-background-color: #222; -fx-border-color: #333; -fx-border-radius: 8; -fx-background-radius: 8;");
-        historyBox.setPrefHeight(150);
+        VBox historyBox = new VBox(10);
+        historyBox.setPadding(new Insets(15));
+        historyBox.setStyle("-fx-background-color: #222; -fx-border-color: #333; -fx-border-radius: 12; -fx-background-radius: 12;");
+        historyBox.setPrefHeight(180);
 
         List<Bid> bids = bidService.getByProductId(p.getId());
         BigDecimal maxBid = p.getPrice() != null ? p.getPrice() : BigDecimal.ZERO;
 
         if (bids.isEmpty()) {
-            Label noBids = new Label("Aucune enchère pour le moment. Prix de base : " + maxBid.toPlainString() + " €");
+            Label noBids = new Label("Aucune enchère pour le moment. Prix : " + maxBid.toPlainString() + " €");
             noBids.setStyle("-fx-text-fill: #888; -fx-font-size: 12;");
             historyBox.getChildren().add(noBids);
         } else {
             for (int i = 0; i < bids.size(); i++) {
                 Bid b = bids.get(i);
-                if (i == 0 && b.getAmount().compareTo(maxBid) > 0) {
-                    maxBid = b.getAmount();
-                }
+                if (i == 0 && b.getAmount().compareTo(maxBid) > 0) maxBid = b.getAmount();
 
                 HBox bidRow = new HBox(10);
                 bidRow.setAlignment(Pos.CENTER_LEFT);
-
                 Label bName = new Label(b.getBidderName());
                 bName.setStyle("-fx-text-fill: #ddd; -fx-font-weight: bold; -fx-font-size: 13;");
                 bName.setPrefWidth(120);
-
                 Label bAmt = new Label(b.getAmount().toPlainString() + " €");
                 bAmt.setStyle("-fx-text-fill: #c0c0c0; -fx-font-weight: bold; -fx-font-size: 14;");
-                bAmt.setPrefWidth(80);
-
-                String dateStr = b.getCreatedAt() != null
-                        ? b.getCreatedAt().toString().replace("T", " ").substring(0, 16)
-                        : "";
-                Label bDate = new Label(dateStr);
-                bDate.setStyle("-fx-text-fill: #666; -fx-font-size: 11;");
-
-                bidRow.getChildren().addAll(bName, bAmt, bDate);
+                bidRow.getChildren().addAll(bName, bAmt);
                 historyBox.getChildren().add(bidRow);
-
-                if (i < bids.size() - 1) {
-                    Separator sep = new Separator();
-                    sep.setStyle("-fx-background-color: #333;");
-                    historyBox.getChildren().add(sep);
-                }
             }
         }
 
@@ -536,7 +584,6 @@ public class ClientController {
         scroll.setPrefHeight(160);
         scroll.setStyle("-fx-background: #222; -fx-background-color: #222; -fx-border-color: transparent;");
 
-        // Bid input
         Label lblAmount = new Label("Votre offre (€) *");
         lblAmount.setStyle("-fx-text-fill: #888; -fx-font-size: 12;");
         TextField tfAmount = clientField("");
@@ -558,33 +605,13 @@ public class ClientController {
                     errLbl.setText("L'offre doit être supérieure à " + currentMax.toPlainString() + " €");
                     return;
                 }
-
                 Bid newBid = new Bid(session.getName(), amt, p.getId());
                 bidService.add(newBid);
-
                 dialog.close();
-                // Show a success message
-                Stage success = new Stage();
-                success.initModality(Modality.APPLICATION_MODAL);
-                success.setTitle("Enchère placée");
-                success.setWidth(350);
-                VBox box = new VBox(16);
-                box.setAlignment(Pos.CENTER);
-                box.setPadding(new Insets(30));
-                box.setStyle("-fx-background-color: #1a1a1a;");
-                Label sTitle = new Label("Offre enregistrée !");
-                sTitle.setStyle("-fx-text-fill: #c0c0c0; -fx-font-size: 18; -fx-font-weight: bold;");
-                Label sMsg = new Label("Votre enchère de " + amt.toPlainString() + " € a été placée.");
-                sMsg.setStyle("-fx-text-fill: #aaa; -fx-font-size: 13;");
-                Button ok = dialogGoldBtn("Fermer");
-                ok.setOnAction(ev -> success.close());
-                box.getChildren().addAll(sTitle, sMsg, ok);
-                success.setScene(new Scene(box));
-                success.show();
-
-            } catch (NumberFormatException ex) {
+                refreshCards();
+            } catch (Exception ex) {
                 setErr(tfAmount);
-                errLbl.setText("Veuillez entrer un montant valide.");
+                errLbl.setText("Montant invalide.");
             }
         });
 
@@ -603,45 +630,37 @@ public class ClientController {
         Stage dialog = new Stage();
         dialog.initModality(Modality.APPLICATION_MODAL);
         dialog.setTitle("Confirmer l'achat");
-        dialog.setWidth(420);
+        dialog.setWidth(440);
         dialog.setResizable(false);
 
-        VBox layout = new VBox(18);
-        layout.setPadding(new Insets(30, 32, 28, 32));
+        VBox layout = new VBox(22);
+        layout.setPadding(new Insets(35, 40, 35, 40));
         layout.setStyle("-fx-background-color: #1a1a1a;");
 
-        // Title
-        Label title = new Label("Confirmer l'achat");
-        title.setStyle("-fx-text-fill: #c0c0c0; -fx-font-size: 18; -fx-font-weight: bold;");
+        Label title = new Label("CONFIRMER L'ACHAT");
+        title.setStyle("-fx-text-fill: #c0c0c0; -fx-font-size: 18; -fx-font-weight: 900; -fx-font-family: 'Segoe UI Black';");
 
-        // Product summary box
-        VBox summaryBox = new VBox(8);
-        summaryBox.setPadding(new Insets(16));
-        summaryBox.setStyle(
-                "-fx-background-color: #2a2a2a; -fx-background-radius: 10; " +
-                        "-fx-border-color: #333; -fx-border-radius: 10; -fx-border-width: 1;");
-
+        VBox summaryBox = new VBox(10);
+        summaryBox.setPadding(new Insets(18));
+        summaryBox.setStyle("-fx-background-color: #222; -fx-background-radius: 12; -fx-border-color: #333; -fx-border-radius: 12; -fx-border-width: 1;");
         Label pName = new Label(p.getName());
-        pName.setStyle("-fx-text-fill: #ffffff; -fx-font-size: 14; -fx-font-weight: bold;");
-        pName.setWrapText(true);
-        Label pArtist = new Label("Artiste : " + (p.getArtistName() != null ? p.getArtistName() : "—"));
-        pArtist.setStyle("-fx-text-fill: #888; -fx-font-size: 12;");
+        pName.setStyle("-fx-text-fill: #ffffff; -fx-font-size: 15; -fx-font-weight: bold;");
         Label pPrice = new Label("Prix : " + (p.getPrice() != null ? p.getPrice().toPlainString() + " €" : "—"));
-        pPrice.setStyle("-fx-text-fill: #c0c0c0; -fx-font-size: 15; -fx-font-weight: bold;");
-        Label pType = new Label("Type : " + p.getType() + "   ·   " + p.getSaleType());
-        pType.setStyle("-fx-text-fill: #555; -fx-font-size: 11;");
-        summaryBox.getChildren().addAll(pName, pArtist, pPrice, pType);
+        pPrice.setStyle("-fx-text-fill: #c0c0c0; -fx-font-size: 18; -fx-font-weight: 900;");
+        summaryBox.getChildren().addAll(pName, pPrice);
 
-        // Buyer name (pre-filled from session)
         Label buyerLabel = new Label("Votre nom *");
         buyerLabel.setStyle("-fx-text-fill: #888; -fx-font-size: 12;");
         TextField tfBuyer = clientField(session.getName());
 
-        // Error
+        Label promoLabel = new Label("Code Promo (optionnel)");
+        promoLabel.setStyle("-fx-text-fill: #888; -fx-font-size: 12;");
+        TextField tfPromo = clientField("");
+        tfPromo.setPromptText("Ex: MYTHORIA2026");
+
         Label errLbl = new Label("");
         errLbl.setStyle("-fx-text-fill: #ff6b6b; -fx-font-size: 11;");
 
-        // Buttons — fixed width so text is always visible
         Button confirmBtn = dialogGoldBtn("✓  Confirmer l'achat");
         Button cancelBtn = dialogOutlineBtn("✕  Annuler");
         cancelBtn.setOnAction(e -> dialog.close());
@@ -653,54 +672,46 @@ public class ClientController {
                 errLbl.setText("Votre nom est requis.");
                 return;
             }
-            if (buyer.length() < 2) {
-                setErr(tfBuyer);
-                errLbl.setText("Nom trop court (min 2 caractères).");
-                return;
+
+            BigDecimal finalPrice = p.getPrice() != null ? p.getPrice() : BigDecimal.ZERO;
+            String promo = tfPromo.getText().trim();
+            if ("MYTHORIA2026".equalsIgnoreCase(promo)) {
+                // Apply 20% discount
+                finalPrice = finalPrice.multiply(new BigDecimal("0.8"));
+                errLbl.setText("✓ Code Promo appliqué ! -20%");
+                errLbl.setStyle("-fx-text-fill: #7ec97e;");
             }
 
-            confirmBtn.setDisable(true);
-            cancelBtn.setDisable(true);
-            errLbl.setStyle("-fx-text-fill: #c0c0c0; -fx-font-size: 12;");
-            errLbl.setText("⏳  Ouverture de Stripe... (Veuillez compléter le paiement dans votre navigateur)");
-
             try {
+                final BigDecimal priceToPay = finalPrice;
                 PaymentServer paymentServer = new PaymentServer(
-                        () -> javafx.application.Platform.runLater(() -> {
-                            // Success callback
-                            Order order = new Order();
-                            order.setBuyerName(buyer);
-                            order.setPrice(p.getPrice() != null ? p.getPrice() : BigDecimal.ZERO);
-                            order.setOrderType(p.getSaleType() != null ? p.getSaleType() : "fixed");
-                            order.setProductId(p.getId());
-                            orderService.add(order);
-
-                            productService.markAsSold(p.getId());
-
-                            dialog.close();
-                            showSuccessDialog(p, buyer);
-                            refreshCards();
-                        }),
-                        () -> javafx.application.Platform.runLater(() -> {
-                            // Cancel callback
-                            confirmBtn.setDisable(false);
-                            cancelBtn.setDisable(false);
-                            errLbl.setStyle("-fx-text-fill: #ff6b6b; -fx-font-size: 11;");
-                            errLbl.setText("Paiement annulé. Vous pouvez réessayer.");
-                        }));
-
+                    () -> Platform.runLater(() -> {
+                        Order order = new Order();
+                        order.setBuyerName(buyer);
+                        order.setPrice(priceToPay);
+                        order.setOrderType(p.getSaleType() != null ? p.getSaleType() : "fixed");
+                        order.setProductId(p.getId());
+                        orderService.add(order);
+                        productService.markAsSold(p.getId());
+                        
+                        // Generate Invoice & QR Code
+                        invoiceService.generateInvoice(order, p);
+                        
+                        dialog.close();
+                        showSuccessDialog(p, buyer);
+                        refreshCards();
+                    }),
+                    () -> Platform.runLater(() -> {
+                        errLbl.setText("Paiement annulé.");
+                        errLbl.setStyle("-fx-text-fill: #ff6b6b;");
+                    })
+                );
                 paymentServer.start();
-                int port = paymentServer.getPort();
                 StripeService stripeService = new StripeService();
-                String url = stripeService.createCheckoutSession(p, "http://localhost:" + port + "/success",
-                        "http://localhost:" + port + "/cancel");
-
+                String url = stripeService.createCheckoutSession(p, "http://localhost:" + paymentServer.getPort() + "/success", "http://localhost:" + paymentServer.getPort() + "/cancel");
                 java.awt.Desktop.getDesktop().browse(new java.net.URI(url));
             } catch (Exception ex) {
-                confirmBtn.setDisable(false);
-                cancelBtn.setDisable(false);
-                errLbl.setStyle("-fx-text-fill: #ff6b6b; -fx-font-size: 11;");
-                errLbl.setText("Erreur Stripe: " + ex.getMessage());
+                errLbl.setText("Erreur Stripe.");
             }
         });
 
@@ -709,194 +720,131 @@ public class ClientController {
         HBox.setHgrow(confirmBtn, Priority.ALWAYS);
         HBox.setHgrow(cancelBtn, Priority.ALWAYS);
 
-        layout.getChildren().addAll(title, summaryBox, buyerLabel, tfBuyer, errLbl, btnRow);
+        layout.getChildren().addAll(title, summaryBox, buyerLabel, tfBuyer, promoLabel, tfPromo, errLbl, btnRow);
         dialog.setScene(new Scene(layout));
         dialog.show();
     }
 
-    // ── Success dialog ───────────────────────────────────────────
     private void showSuccessDialog(Product p, String buyer) {
         Stage success = new Stage();
         success.initModality(Modality.APPLICATION_MODAL);
         success.setTitle("Achat confirmé !");
-        success.setWidth(380);
-        success.setResizable(false);
-
+        success.setWidth(350);
         VBox layout = new VBox(16);
-        layout.setPadding(new Insets(32, 36, 28, 36));
+        layout.setPadding(new Insets(30));
         layout.setAlignment(Pos.CENTER);
         layout.setStyle("-fx-background-color: #1a1a1a;");
-
-        Label icon = new Label("✅");
-        icon.setStyle("-fx-font-size: 42;");
-
-        Label msg1 = new Label("Commande confirmée !");
-        msg1.setStyle("-fx-text-fill: #a8d5a2; -fx-font-size: 18; -fx-font-weight: bold;");
-
-        Label msg2 = new Label(
-                "Merci " + buyer + " !\nVotre achat de « " + p.getName() + " »\na été enregistré avec succès.");
-        msg2.setStyle("-fx-text-fill: #888; -fx-font-size: 12;");
-        msg2.setWrapText(true);
-        msg2.setTextAlignment(javafx.scene.text.TextAlignment.CENTER);
-
-        Button closeBtn = goldBtn("Fermer");
-        closeBtn.setOnAction(e -> success.close());
-
-        layout.getChildren().addAll(icon, msg1, msg2, closeBtn);
+        Label msg = new Label("Merci " + buyer + " ! Votre achat est confirmé.");
+        msg.setStyle("-fx-text-fill: #aaa; -fx-font-size: 13;");
+        Button ok = dialogGoldBtn("Fermer");
+        ok.setOnAction(e -> success.close());
+        layout.getChildren().addAll(msg, ok);
         success.setScene(new Scene(layout));
         success.show();
     }
 
-    // ── Avis dialog ──────────────────────────────────────────────
     private void showAvisDialog(Product p) {
         Stage dialog = new Stage();
         dialog.initModality(Modality.APPLICATION_MODAL);
         dialog.setTitle("Laisser un avis");
-        dialog.setWidth(440);
-        dialog.setResizable(false);
-
+        dialog.setWidth(400);
         VBox layout = new VBox(16);
-        layout.setPadding(new Insets(28, 32, 28, 32));
+        layout.setPadding(new Insets(30));
         layout.setStyle("-fx-background-color: #1a1a1a;");
 
-        // Title
-        Label title = new Label("★  Laisser un avis");
-        title.setStyle("-fx-text-fill: #c9a84c; -fx-font-size: 18; -fx-font-weight: bold;");
+        Label title = new Label("★ Laisser un avis");
+        title.setStyle("-fx-text-fill: #c9a84c; -fx-font-size: 20; -fx-font-weight: bold;");
+        
+        Label ratingLbl = new Label("Votre note :");
+        ratingLbl.setStyle("-fx-text-fill: #888; -fx-font-size: 13;");
 
-        // Product name
-        Label prodLbl = new Label("« " + p.getName() + " »");
-        prodLbl.setStyle("-fx-text-fill: #777; -fx-font-size: 12;");
-        prodLbl.setWrapText(true);
-
-        // ── Star rating ───────────────────────────────────────────
-        Label ratingLbl = new Label("Note *");
-        ratingLbl.setStyle("-fx-text-fill: #888; -fx-font-size: 12;");
-
-        final int[] selectedRating = { 0 };
-        Button[] stars = new Button[5];
-        HBox starRow = new HBox(6);
+        HBox starRow = new HBox(5);
         starRow.setAlignment(Pos.CENTER_LEFT);
+        final int[] selectedRating = {0};
+        Button[] stars = new Button[5];
 
         for (int i = 0; i < 5; i++) {
             final int val = i + 1;
             Button star = new Button("☆");
-            star.setStyle("-fx-background-color: transparent; -fx-text-fill: #555; " +
-                    "-fx-font-size: 24; -fx-padding: 0 4; -fx-cursor: hand;");
+            star.setStyle("-fx-background-color: transparent; -fx-text-fill: #555; -fx-font-size: 26; -fx-padding: 0 4; -fx-cursor: hand;");
             star.setOnAction(e -> {
                 selectedRating[0] = val;
-                // Update all stars display
                 for (int j = 0; j < 5; j++) {
                     boolean filled = (j < val);
                     stars[j].setText(filled ? "★" : "☆");
-                    stars[j].setStyle("-fx-background-color: transparent; " +
-                            "-fx-text-fill: " + (filled ? "#c9a84c" : "#555") + "; " +
-                            "-fx-font-size: 24; -fx-padding: 0 4; -fx-cursor: hand;");
+                    stars[j].setStyle("-fx-background-color: transparent; -fx-text-fill: " + (filled ? "#c9a84c" : "#555") + "; -fx-font-size: 26; -fx-padding: 0 4; -fx-cursor: hand;");
                 }
             });
             stars[i] = star;
             starRow.getChildren().add(star);
         }
 
-        // ── Comment ─────────────────────────────────────────────
-        Label commentLbl = new Label("Commentaire (optionnel)");
-        commentLbl.setStyle("-fx-text-fill: #888; -fx-font-size: 12;");
-
         TextArea taComment = new TextArea();
-        taComment.setPromptText("Partagez votre expérience…");
-        taComment.setPrefRowCount(3);
+        taComment.setPromptText("Partagez votre avis sur cette oeuvre...");
+        taComment.setPrefRowCount(4);
         taComment.setWrapText(true);
-        taComment.setStyle(
-                "-fx-control-inner-background: #2a2a2a; " +
-                        "-fx-background-color: -fx-control-inner-background; " +
-                        "-fx-text-fill: #ffffff; " +
-                        "-fx-prompt-text-fill: derive(-fx-control-inner-background, +80%); " +
-                        "-fx-border-color: #444; -fx-border-radius: 6; -fx-background-radius: 6;");
-
-        // ── Error label ──────────────────────────────────────────
+        taComment.setStyle("-fx-control-inner-background: #2a2a2a; -fx-text-fill: #fff; -fx-border-color: #444; -fx-border-radius: 5;");
+        
         Label errLbl = new Label("");
         errLbl.setStyle("-fx-text-fill: #ff6b6b; -fx-font-size: 11;");
 
-        // ── Buttons ──────────────────────────────────────────────
-        Button submitBtn = dialogGoldBtn("★  Envoyer l'avis");
-        Button cancelBtn = dialogOutlineBtn("✕  Annuler");
-        cancelBtn.setOnAction(e -> dialog.close());
-
-        submitBtn.setOnAction(e -> {
+        Button submit = dialogGoldBtn("Envoyer l'avis");
+        submit.setPrefWidth(Double.MAX_VALUE);
+        submit.setOnAction(e -> {
             if (selectedRating[0] == 0) {
-                errLbl.setText("Veuillez choisir une note (1 à 5 étoiles).");
+                errLbl.setText("Veuillez sélectionner une note.");
                 return;
             }
-            String comment = taComment.getText().trim();
-
-            Review review = new Review();
-            review.setReviewerName(session.getName());
-            review.setRating(selectedRating[0]);
-            review.setComment(comment.isBlank() ? null : comment);
-            review.setProductId(p.getId());
-            reviewService.add(review);
-
+            Review r = new Review();
+            r.setReviewerName(session.getName());
+            r.setRating(selectedRating[0]);
+            r.setComment(taComment.getText().trim());
+            r.setProductId(p.getId());
+            reviewService.add(r);
             dialog.close();
+            
             // Feedback
             Stage ok = new Stage();
-            ok.initModality(Modality.APPLICATION_MODAL);
-            ok.setTitle("Avis envoyé !");
-            ok.setWidth(320);
-            ok.setResizable(false);
-            VBox okBox = new VBox(14);
-            okBox.setPadding(new Insets(28, 28, 24, 28));
+            VBox okBox = new VBox(15);
+            okBox.setPadding(new Insets(20));
             okBox.setAlignment(Pos.CENTER);
             okBox.setStyle("-fx-background-color: #1a1a1a;");
-            Label okIcon = new Label("✅");
-            okIcon.setStyle("-fx-font-size: 36;");
-            String stars2 = "★".repeat(selectedRating[0]) + "☆".repeat(5 - selectedRating[0]);
-            Label okLbl = new Label("Merci pour votre avis !\n" + stars2);
-            okLbl.setStyle("-fx-text-fill: #a8d5a2; -fx-font-size: 14; -fx-font-weight: bold;");
-            okLbl.setTextAlignment(javafx.scene.text.TextAlignment.CENTER);
-            Button okClose = dialogGoldBtn("Fermer");
-            okClose.setOnAction(ev -> ok.close());
-            okBox.getChildren().addAll(okIcon, okLbl, okClose);
+            Label okLbl = new Label("Merci pour votre avis !");
+            okLbl.setStyle("-fx-text-fill: #7ec97e; -fx-font-weight: bold;");
+            Button close = dialogGoldBtn("Fermer");
+            close.setOnAction(ev -> ok.close());
+            okBox.getChildren().addAll(okLbl, close);
             ok.setScene(new Scene(okBox));
             ok.show();
         });
-
-        HBox btnRow = new HBox(12, submitBtn, cancelBtn);
-        btnRow.setAlignment(Pos.CENTER_LEFT);
-        HBox.setHgrow(submitBtn, Priority.ALWAYS);
-        HBox.setHgrow(cancelBtn, Priority.ALWAYS);
-
-        layout.getChildren().addAll(title, prodLbl, ratingLbl, starRow, commentLbl, taComment, errLbl, btnRow);
+        
+        layout.getChildren().addAll(title, ratingLbl, starRow, taComment, errLbl, submit);
         dialog.setScene(new Scene(layout));
         dialog.show();
     }
 
     // ── 3D Showroom (Native JavaFX 3D) ───────────────────────────
     private void show3DMuseumView(Product product) {
-        // Create 3D Stage
         Stage stage = new Stage();
         stage.setTitle("Galerie 3D — " + product.getName());
         stage.initModality(Modality.APPLICATION_MODAL);
 
-        // --- 3D Scene Setup ---
         Group root3D = new Group();
-        Group room = new Group(); // Group for the environment
+        Group room = new Group(); 
         
-        // Materials
-        PhongMaterial wallMat = new PhongMaterial(Color.web("#2a2c30")); // Lighter grey to see geometry
-        PhongMaterial floorMat = new PhongMaterial(Color.web("#111111")); // Dark marble-like floor
-        PhongMaterial goldFrameMat = new PhongMaterial(Color.web("#d4af37")); // Gold Frame
+        PhongMaterial wallMat = new PhongMaterial(Color.web("#2a2c30"));
+        PhongMaterial floorMat = new PhongMaterial(Color.web("#111111"));
+        PhongMaterial goldFrameMat = new PhongMaterial(Color.web("#d4af37"));
         goldFrameMat.setSpecularColor(Color.WHITE);
         
-        // Floor
         Box floor = new Box(1500, 2, 1500);
         floor.setMaterial(floorMat);
         floor.setTranslateY(300);
 
-        // Ceiling
         Box ceiling = new Box(1500, 2, 1500);
         ceiling.setMaterial(new PhongMaterial(Color.web("#0a0a0a")));
         ceiling.setTranslateY(-400);
 
-        // Walls (Left, Right, Back)
         Box backWall = new Box(1500, 800, 2);
         backWall.setMaterial(wallMat);
         backWall.setTranslateZ(600);
@@ -911,39 +859,19 @@ public class ClientController {
         rightWall.setMaterial(new PhongMaterial(Color.web("#202225")));
         rightWall.setTranslateX(600);
         rightWall.setTranslateY(-50);
-
-        // Baseboards (to see the room corners)
-        Box bbBack = new Box(1500, 20, 10);
-        bbBack.setMaterial(new PhongMaterial(Color.web("#0a0a0a")));
-        bbBack.setTranslateY(290); bbBack.setTranslateZ(595);
         
-        Box bbLeft = new Box(10, 20, 1500);
-        bbLeft.setMaterial(new PhongMaterial(Color.web("#0a0a0a")));
-        bbLeft.setTranslateY(290); bbLeft.setTranslateX(-595);
-
-        Box bbRight = new Box(10, 20, 1500);
-        bbRight.setMaterial(new PhongMaterial(Color.web("#0a0a0a")));
-        bbRight.setTranslateY(290); bbRight.setTranslateX(595);
-        
-        // The Painting Frame
         Box frame = new Box(340, 260, 20);
         frame.setMaterial(goldFrameMat);
         frame.setTranslateZ(580);
         frame.setTranslateY(-60);
 
-        // The Painting Canvas
         Box canvas = new Box(300, 220, 5);
         PhongMaterial canvasMat = new PhongMaterial();
         String rawUrl = product.getImageUrl();
         if (rawUrl != null && !rawUrl.isBlank()) {
             try {
                 String urlStr = rawUrl.startsWith("http") || rawUrl.startsWith("file:") ? rawUrl : "http://localhost" + rawUrl;
-                if (!urlStr.startsWith("http") && !urlStr.startsWith("file:")) {
-                    java.io.File f = new java.io.File(rawUrl);
-                    if (f.exists()) urlStr = f.toURI().toString();
-                }
-                Image img = new Image(urlStr, true);
-                canvasMat.setDiffuseMap(img);
+                canvasMat.setDiffuseMap(new Image(urlStr, true));
             } catch (Exception e) {
                 canvasMat.setDiffuseColor(Color.DARKGRAY);
             }
@@ -954,26 +882,14 @@ public class ClientController {
         canvas.setTranslateZ(568);
         canvas.setTranslateY(-60);
 
-        // Bench
-        Group bench = new Group();
-        Box seat = new Box(240, 25, 80);
-        seat.setMaterial(new PhongMaterial(Color.web("#111")));
-        Box leg1 = new Box(15, 60, 60); leg1.setTranslateX(-100); leg1.setTranslateY(40);
-        Box leg2 = new Box(15, 60, 60); leg2.setTranslateX(100); leg2.setTranslateY(40);
-        bench.getChildren().addAll(seat, leg1, leg2);
-        bench.setTranslateY(200); bench.setTranslateZ(0);
-
-        // --- Lights ---
         AmbientLight ambient = new AmbientLight(Color.rgb(100, 100, 120, 0.6));
         PointLight pointLight = new PointLight(Color.web("#fff5e6"));
         pointLight.setTranslateZ(250);
         pointLight.setTranslateY(-200);
-        pointLight.setTranslateX(0);
 
-        room.getChildren().addAll(floor, ceiling, backWall, leftWall, rightWall, bbBack, bbLeft, bbRight, frame, canvas, bench);
+        room.getChildren().addAll(floor, ceiling, backWall, leftWall, rightWall, frame, canvas);
         root3D.getChildren().addAll(room, ambient, pointLight);
 
-        // --- Camera ---
         PerspectiveCamera camera = new PerspectiveCamera(true);
         camera.setNearClip(0.1);
         camera.setFarClip(5000.0);
@@ -984,174 +900,75 @@ public class ClientController {
         subScene.setCamera(camera);
         subScene.setFill(Color.BLACK);
 
-        // Default rotation to show 3D immediately
         Rotate rotateX = new Rotate(-10, Rotate.X_AXIS);
         Rotate rotateY = new Rotate(20, Rotate.Y_AXIS);
         room.getTransforms().addAll(rotateX, rotateY);
 
-        final double[] lastMouseX = {0};
-        final double[] lastMouseY = {0};
-
-        subScene.setOnMousePressed(e -> {
-            lastMouseX[0] = e.getSceneX();
-            lastMouseY[0] = e.getSceneY();
-        });
-
         subScene.setOnMouseDragged(e -> {
-            double deltaX = e.getSceneX() - lastMouseX[0];
-            double deltaY = e.getSceneY() - lastMouseY[0];
-            rotateY.setAngle(rotateY.getAngle() + deltaX * 0.3);
-            rotateX.setAngle(rotateX.getAngle() - deltaY * 0.3);
-            lastMouseX[0] = e.getSceneX();
-            lastMouseY[0] = e.getSceneY();
+            rotateY.setAngle(rotateY.getAngle() + (e.getSceneX() > 550 ? 1 : -1) * 2);
+            rotateX.setAngle(rotateX.getAngle() + (e.getSceneY() > 375 ? -1 : 1) * 2);
         });
 
-        // UI Overlay
         VBox info = new VBox(10);
         info.setPadding(new Insets(30));
         info.setStyle("-fx-background-color: rgba(20,20,20,0.85); -fx-background-radius: 0 20 0 0;");
-        info.setOpacity(0); // Hidden by default
-        
         Label lTitle = new Label(product.getName());
         lTitle.setStyle("-fx-text-fill: white; -fx-font-size: 26; -fx-font-weight: bold;");
         Label lArt = new Label("Oeuvre de " + (product.getArtistName()!=null?product.getArtistName():"Anonyme"));
         lArt.setStyle("-fx-text-fill: #d4af37; -fx-font-size: 16; -fx-font-style: italic;");
-        Label lPrice = new Label(product.getPrice() + " €");
-        lPrice.setStyle("-fx-text-fill: #fff; -fx-font-size: 20;");
-        
         Button backBtn = new Button("← Sortir de la galerie");
-        backBtn.setStyle("-fx-background-color: #d4af37; -fx-text-fill: black; -fx-font-weight: bold; -fx-cursor: hand; -fx-padding: 10 20; -fx-background-radius: 5;");
+        backBtn.setStyle("-fx-background-color: #d4af37; -fx-text-fill: black; -fx-font-weight: bold; -fx-cursor: hand;");
         backBtn.setOnAction(e -> stage.close());
-        
-        info.getChildren().addAll(lTitle, lArt, lPrice, new Separator(), backBtn);
+        info.getChildren().addAll(lTitle, lArt, backBtn);
 
-        // Movement with Scroll (Forward/Backward)
-        subScene.setOnScroll(e -> {
-            double delta = e.getDeltaY();
-            double newZ = camera.getTranslateZ() + delta * 2;
-            if (newZ > 450) newZ = 450; 
-            if (newZ < -1500) newZ = -1500;
-            camera.setTranslateZ(newZ);
-            info.setOpacity(newZ > -150 ? 1 : 0);
-        });
-        
         StackPane root = new StackPane(subScene, info);
         StackPane.setAlignment(info, Pos.BOTTOM_LEFT);
         
         Scene scene = new Scene(root, 1100, 750);
-        
-        // Full Key Movement (WASD / Arrows)
         scene.setOnKeyPressed(e -> {
-            double moveAmount = 15.0;
             switch (e.getCode()) {
-                case W, UP -> camera.setTranslateZ(Math.min(450, camera.getTranslateZ() + moveAmount));
-                case S, DOWN -> camera.setTranslateZ(Math.max(-1500, camera.getTranslateZ() - moveAmount));
-                case A, LEFT -> camera.setTranslateX(Math.max(-450, camera.getTranslateX() - moveAmount));
-                case D, RIGHT -> camera.setTranslateX(Math.min(450, camera.getTranslateX() + moveAmount));
+                case W, UP -> camera.setTranslateZ(camera.getTranslateZ() + 20);
+                case S, DOWN -> camera.setTranslateZ(camera.getTranslateZ() - 20);
+                case A, LEFT -> camera.setTranslateX(camera.getTranslateX() - 20);
+                case D, RIGHT -> camera.setTranslateX(camera.getTranslateX() + 20);
             }
-            // Update info visibility
-            info.setOpacity(camera.getTranslateZ() > -150 ? 1 : 0);
         });
 
         stage.setScene(scene);
         stage.show();
     }
 
-    /** Escape a string for safe embedding in JavaScript */
-    private String escJs(String s) {
-        if (s == null) return "";
-        return s.replace("\\", "\\\\").replace("\"", "\\\"")
-                .replace("\n", "\\n").replace("\r", "").replace("\t", " ");
-    }
-
-    // ── UI Helpers ───────────────────────────────────────────────
-
     private TextField clientField(String value) {
         TextField tf = new TextField(value);
-        tf.setStyle(
-                "-fx-control-inner-background: #2a2a2a; " +
-                        "-fx-background-color: -fx-control-inner-background; " +
-                        "-fx-text-fill: #ffffff; " +
-                        "-fx-prompt-text-fill: derive(-fx-control-inner-background, +80%); " +
-                        "-fx-border-color: #444; -fx-border-radius: 6; -fx-background-radius: 6; -fx-padding: 9;");
-        tf.focusedProperty().addListener((obs, wasF, isF) -> {
-            if (!tf.getStyle().contains("#ff6b6b")) {
-                tf.setStyle(isF
-                        ? tf.getStyle().replace("-fx-border-color: #444;",
-                                "-fx-border-color: #c9a84c; -fx-border-width: 1.5;")
-                        : tf.getStyle()
-                                .replace("-fx-border-color: #c9a84c; -fx-border-width: 1.5;",
-                                        "-fx-border-color: #444;"));
-            }
-        });
+        tf.setStyle("-fx-control-inner-background: #2a2a2a; -fx-text-fill: #fff; -fx-border-color: #444; -fx-padding: 8;");
         return tf;
     }
 
     private void setErr(TextField tf) {
-        tf.setStyle(
-                "-fx-control-inner-background: #2a2a2a; " +
-                        "-fx-background-color: -fx-control-inner-background; " +
-                        "-fx-text-fill: #ffffff; " +
-                        "-fx-border-color: #ff6b6b; -fx-border-width: 1.5; " +
-                        "-fx-border-radius: 6; -fx-background-radius: 6; -fx-padding: 9;");
+        tf.setStyle(tf.getStyle() + "-fx-border-color: #ff6b6b;");
     }
 
-    // ── Button helpers for CARDS (full width) ────────────────────
     private Button goldBtn(String text) {
         Button b = new Button(text);
-        b.setPrefWidth(Double.MAX_VALUE);
-        b.setStyle("-fx-background-color: #c9a84c; -fx-text-fill: #111; -fx-font-weight: bold; " +
-                "-fx-background-radius: 7; -fx-padding: 9 0; -fx-cursor: hand; -fx-font-size: 13;");
-        b.setOnMouseEntered(
-                e -> b.setStyle("-fx-background-color: #e0be6a; -fx-text-fill: #111; -fx-font-weight: bold; " +
-                        "-fx-background-radius: 7; -fx-padding: 9 0; -fx-cursor: hand; -fx-font-size: 13;"));
-        b.setOnMouseExited(
-                e -> b.setStyle("-fx-background-color: #c9a84c; -fx-text-fill: #111; -fx-font-weight: bold; " +
-                        "-fx-background-radius: 7; -fx-padding: 9 0; -fx-cursor: hand; -fx-font-size: 13;"));
+        b.setStyle("-fx-background-color: #c9a84c; -fx-text-fill: #111; -fx-font-weight: bold; -fx-padding: 10 20;");
         return b;
     }
 
-    private Button outlineBtn(String text) {
-        Button b = new Button(text);
-        b.setPrefWidth(Double.MAX_VALUE);
-        b.setStyle("-fx-background-color: transparent; -fx-text-fill: #ccc; " +
-                "-fx-border-color: #555; -fx-border-radius: 7; -fx-background-radius: 7; -fx-padding: 10; -fx-cursor: hand;");
-        b.setOnMouseEntered(e -> b.setStyle("-fx-background-color: #2a2a2a; -fx-text-fill: #fff; " +
-                "-fx-border-color: #888; -fx-border-radius: 7; -fx-background-radius: 7; -fx-padding: 10; -fx-cursor: hand;"));
-        b.setOnMouseExited(e -> b.setStyle("-fx-background-color: transparent; -fx-text-fill: #ccc; " +
-                "-fx-border-color: #555; -fx-border-radius: 7; -fx-background-radius: 7; -fx-padding: 10; -fx-cursor: hand;"));
-        return b;
-    }
-
-    // ── Button helpers for DIALOG (auto width, proper text) ──────
     private Button dialogGoldBtn(String text) {
         Button b = new Button(text);
-        b.setStyle("-fx-background-color: #c9a84c; -fx-text-fill: #111; -fx-font-weight: bold; " +
-                "-fx-background-radius: 7; -fx-padding: 10 22; -fx-cursor: hand; -fx-font-size: 13;");
-        b.setOnMouseEntered(
-                e -> b.setStyle("-fx-background-color: #e0be6a; -fx-text-fill: #111; -fx-font-weight: bold; " +
-                        "-fx-background-radius: 7; -fx-padding: 10 22; -fx-cursor: hand; -fx-font-size: 13;"));
-        b.setOnMouseExited(
-                e -> b.setStyle("-fx-background-color: #c9a84c; -fx-text-fill: #111; -fx-font-weight: bold; " +
-                        "-fx-background-radius: 7; -fx-padding: 10 22; -fx-cursor: hand; -fx-font-size: 13;"));
+        b.setStyle("-fx-background-color: #c9a84c; -fx-text-fill: #111; -fx-font-weight: bold; -fx-padding: 10 20;");
         return b;
     }
 
     private Button dialogOutlineBtn(String text) {
         Button b = new Button(text);
-        b.setStyle("-fx-background-color: transparent; -fx-text-fill: #ccc; " +
-                "-fx-border-color: #555; -fx-border-radius: 7; -fx-background-radius: 7; -fx-padding: 10 22; -fx-cursor: hand;");
-        b.setOnMouseEntered(e -> b.setStyle("-fx-background-color: #2a2a2a; -fx-text-fill: #fff; " +
-                "-fx-border-color: #888; -fx-border-radius: 7; -fx-background-radius: 7; -fx-padding: 10 22; -fx-cursor: hand;"));
-        b.setOnMouseExited(e -> b.setStyle("-fx-background-color: transparent; -fx-text-fill: #ccc; " +
-                "-fx-border-color: #555; -fx-border-radius: 7; -fx-background-radius: 7; -fx-padding: 10 22; -fx-cursor: hand;"));
+        b.setStyle("-fx-background-color: transparent; -fx-text-fill: #ccc; -fx-border-color: #555; -fx-padding: 10 20;");
         return b;
     }
 
     private Label miniTag(String text) {
         Label l = new Label(text != null ? text : "—");
-        l.setStyle("-fx-background-color: #333; -fx-text-fill: #999; -fx-font-size: 10; " +
-                "-fx-background-radius: 4; -fx-padding: 2 7;");
+        l.setStyle("-fx-background-color: #333; -fx-text-fill: #999; -fx-font-size: 10; -fx-padding: 2 6;");
         return l;
     }
 
@@ -1161,7 +978,7 @@ public class ClientController {
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
                 setText(empty || item == null ? "" : item);
-                setStyle("-fx-text-fill: #ffffff; -fx-background-color: #2a2a2a;");
+                setStyle("-fx-text-fill: #fff; -fx-background-color: #2a2a2a;");
             }
         };
     }

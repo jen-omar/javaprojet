@@ -91,7 +91,7 @@ public class ChatbotService {
             case "order_history": return "Vous pouvez consulter vos commandes dans l'onglet 'Commandes'.";
             case "wishlist_view": return "Vos favoris sont dans l'onglet 'Liste de souhaits'.";
             case "cart_view": return "Vous pouvez finaliser vos achats dans votre panier.";
-            default: return "Je peux vous aider à naviguer vers cette section !";
+            default: return "Désolée, je ne peux pas vous répondre.";
         }
     }
 

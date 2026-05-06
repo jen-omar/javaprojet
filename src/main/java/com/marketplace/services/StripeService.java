@@ -10,7 +10,7 @@ import java.math.BigDecimal;
 public class StripeService {
 
     public StripeService() {
-        Stripe.apiKey = "YOUR_STRIPE_SECRET_KEY";
+        Stripe.apiKey = "YOUR_STRIPE_SECRET_KEY"; // Masked to bypass GitHub secret scanning
     }
 
     public String createCheckoutSession(Product p, String successUrl, String cancelUrl) throws Exception {
