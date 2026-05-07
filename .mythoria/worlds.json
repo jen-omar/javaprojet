@@ -1,0 +1,23 @@
+[
+  {
+    "id": "d115b44a-afaa-4e05-9c96-d154990ce20b",
+    "title": "Mythoria Prime",
+    "description": "Le monde d\u0027origine : archives, guildes et chroniques.",
+    "loreSnapshot": "Scribes, Oracles et Grand Archives au coeur d\u0027une cité sombre et dorée.",
+    "createdAt": "2026-03-13T15:51:29.771400100Z"
+  },
+  {
+    "id": "2423212f-22db-47d8-87f9-147704119423",
+    "title": "The Ashen Coast",
+    "description": "Une côte volcanique où les chroniques se paient en cendres.",
+    "loreSnapshot": "Le vent porte des fragments de mémoires et des noms oubliés.",
+    "createdAt": "2026-03-13T15:51:29.771400100Z"
+  },
+  {
+    "id": "a82f9814-875f-49d3-a839-91ef636d6de0",
+    "title": "Gilded Ruins",
+    "description": "Des ruines arcanepunk aux mécanismes d\u0027or.",
+    "loreSnapshot": "La lumière dorée réagit aux serments et aux mensonges.",
+    "createdAt": "2026-03-13T15:51:29.771400100Z"
+  }
+]

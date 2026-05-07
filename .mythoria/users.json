@@ -1,0 +1,44 @@
+[
+  {
+    "id": "32d0f0b3-4146-47ea-8df1-002fe9d5d578",
+    "username": "scribe",
+    "displayName": "Grand Scribe",
+    "passwordHash": "539fbcedbfa09d167d77a802948a69ab9dcd6c28f05a8a068551a114fe7347fd",
+    "rank": "Actif",
+    "points": 100,
+    "email": "scribe@mythoria.local",
+    "firstName": "Grand",
+    "lastName": "Scribe",
+    "phoneNumber": "",
+    "role": "user",
+    "databaseBacked": false
+  },
+  {
+    "id": "fc971962-167d-4697-800e-a356882501f1",
+    "username": "majd",
+    "displayName": "Majd Ben Abdallah",
+    "passwordHash": "$2a$10$OenWl2cMadJdS4UudpAc/eMNrNviegffoQa8S2RZSa6Tkzk30nbE.",
+    "rank": "Débutant",
+    "points": 0,
+    "email": "benabdallahmajd5@gmail.com",
+    "firstName": "Majd",
+    "lastName": "Ben Abdallah",
+    "phoneNumber": "+216 98169003",
+    "role": "user",
+    "databaseBacked": false
+  },
+  {
+    "id": "ae58b726-53c0-47e8-8f43-0a37605c11b4",
+    "username": "raed",
+    "displayName": "Raed Ben Yahia",
+    "passwordHash": "$2a$10$tzVfUxV7sP2SfdgYMaeQNeuZ/k/3Sti76d06uR/sYyQkVm4VU5ieC",
+    "rank": "Débutant",
+    "points": 0,
+    "email": "majd.benabdallah@esprit.tn",
+    "firstName": "Raed",
+    "lastName": "Ben Yahia",
+    "phoneNumber": "+216 29545686",
+    "role": "user",
+    "databaseBacked": false
+  }
+]

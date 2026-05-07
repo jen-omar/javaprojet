@@ -1,0 +1,242 @@
+================================================================================
+MYTHORIA - SPÉCIFICATIONS TECHNIQUES POUR MIGRATION JAVAFX (DESKTOP)
+================================================================================
+
+1. SPÉCIFICATIONS UI ET PALETTE DE COULEURS
+--------------------------------------------------------------------------------
+La charte graphique repose sur le thème "Dark Fantasy / Arcanepunk" avec une dominance
+de fonds sombres (ardoise/noir) et d'accents dorés/lumineux.
+
+A. Palette de Couleurs (Codes Hexadécimaux)
+   - Fonds Principaux :
+     * Background App : #0f172a (Slate 900) ou #0a0a0a (Black)
+     * Card Background : #000000 (Black) avec opacité 40% (rgba(0,0,0,0.4))
+     * Modal/Overlay : Backdrop blur XL + bg-black/40
+   
+   - Accents Dorés (Thème Mythoria) :
+     * Or Principal : #c5a059
+     * Or Foncé : #bf953f
+     * Or Lumineux : #fcf6ba
+     * Bordures Dorées : border-[#c5a059]/30
+   
+   - Texte :
+     * Titres (Blanc) : #ffffff
+     * Sous-titres (Gris clair) : #cbd5e1 (Slate 300)
+     * Corps de texte (Gris moyen) : #94a3b8 (Slate 400)
+     * Badges/Labels : #64748b (Slate 500)
+   
+   - États Interactifs :
+     * Hover Bordure : border-white/20
+     * Hover Fond : bg-white/5 ou bg-white/10
+     * Active/Focus : Ring dorés (#c5a059)
+     * Disabled : Opacité 50%, cursor-not-allowed
+   
+   - Status :
+     * Succès : #22c55e (Green 500)
+     * Erreur : #ef4444 (Red 500)
+     * Info : #60a5fa (Blue 400)
+     * Magique/Arcane : #2dd4bf (Teal 400)
+
+B. Typographie
+   - Titres Principaux (H1, H2) : 'Cinzel Decorative', serif
+     * Poids : 700 (Bold)
+     * Taille : 3xl (30px) à 5xl (48px)
+   - Sous-titres & UI (Boutons, Labels) : 'Cinzel', serif
+     * Poids : 400-600
+     * Transform : Uppercase
+     * Tracking : Widest (0.1em - 0.3em)
+   - Corps de Texte (Lecture) : 'Cormorant Garamond', serif
+     * Taille : 1.125rem (18px)
+     * Line-height : 1.75
+   - Fallback : serif
+
+C. Composants UI Spécifiques
+   - Carte de Livre (Book Card) :
+     * Border-radius : 1rem (16px)
+     * Border : 1px solid rgba(255,255,255,0.1)
+     * Shadow : shadow-2xl
+     * Aspect Ratio : Portrait (souvent 2/3 ou 3/4)
+     * Effet Hover : Scale 1.05, Border Glow
+   
+   - Grand Archives (Liste) :
+     * Grid Layout : Responsive (1 col mobile, 2 cols tablet, 3-4 cols desktop)
+     * Gap : 2rem (32px)
+     * Padding container : 2rem (32px)
+
+2. ARCHITECTURE DES DONNÉES
+--------------------------------------------------------------------------------
+Structure des entités pour la base de données relationnelle (équivalent Doctrine).
+
+A. Entité Book
+   - id (Integer, PK) : Identifiant unique
+   - title (String, 255) : Titre du livre (Obligatoire)
+   - description (Text, Nullable) : Résumé ou accroche
+   - coverImage (String, 255) : Chemin vers l'image ('images/covers/...')
+   - status (String, 20) : 'DRAFT', 'PUBLISHED', 'IN_PROGRESS'
+   - classement (String, 20, Nullable) : 'Commoner', 'Arcane', 'Legendary', 'Unworthy'
+   - qualityReview (JSON, Nullable) : Stocke le feedback de l'Oracle/IA
+   - world (Relation ManyToOne -> World) : Monde d'appartenance
+   - author (Relation ManyToOne -> User) : Créateur
+   - createdAt (DateTimeImmutable)
+   - isTutorialBook (Boolean) : Identifie les livres d'épreuve (Architect, Weaver...)
+
+B. Entité Page
+   - id (Integer, PK)
+   - type (String, 50) : 'Introduction', 'End', 'Standard'
+   - content (Text) : Contenu HTML/Texte riche
+   - book (Relation ManyToOne -> Book)
+   - chapterNumber (Integer, Nullable) : Pour l'ordre (si utilisé hors entité Chapter)
+
+C. Entité Chapter
+   - id (Integer, PK)
+   - title (String, 255)
+   - content (Text) : Contenu du chapitre
+   - chapterNumber (Integer) : Ordre séquentiel (1, 2, 3...)
+   - book (Relation ManyToOne -> Book)
+
+D. Entité WorldSetting
+   - id (Integer, PK)
+   - loreSnapshot (Text, Nullable) : Résumé contextuel pour l'IA
+   - rules (JSON, Nullable) : Règles spécifiques du monde
+   - world (Relation OneToOne -> World)
+
+E. Entité User (Champs Progression)
+   - rank (String) : 'Neophyte', 'Journeyman', 'Elder'
+   - points (Integer) : Score global (PC)
+   - readingLog (JSON) : Historique de lecture pour le Scholar Trial
+
+3. SYSTÈME DE VALIDATION (ORACLE)
+--------------------------------------------------------------------------------
+Le système est bicéphale : Validation Technique (BookValidationService) et Validation IA (AgentTutorialService).
+
+A. Validation Technique (Standard & Chronique)
+   1. Sécurité (Unworthy) :
+      - Moins de 50 mots au total -> Rejet (-50 PC).
+   
+   2. Structure :
+      - Obligatoire : 1 Page 'Introduction', 1 Page 'End'.
+      - Chapitres : Min 2 chapitres de développement (1 pour Tutorial).
+      - "My First Chronicle" : Min 2 chapitres.
+   
+   3. Densité :
+      - Si <= 2 chapitres, chaque chapitre doit faire > 600 mots.
+   
+   4. Cohérence Contextuelle :
+      - Nom du Monde : Doit apparaître >= 2 fois (sauf Tutorial).
+      - Titre : Au moins 1 mot-clé du titre (hors mots vides) doit apparaître dans le texte.
+   
+   5. Anti-Spam & Linguistique :
+      - Répétition Mots : Max 15% pour un même mot (hors mots vides).
+      - Diversité Lexicale : Min 30% de mots uniques.
+      - Séquences : Pas de motif de 4 mots répété 3 fois consécutivement.
+      - Ponctuation : Ratio signes/mots >= 0.1.
+      - Complexité : Longueur moyenne des mots > 3.8 caractères.
+
+B. Classification (Rangs de Livre)
+   - Commoner (100 PC) :
+     * Structure valide + Min 3 chapitres (pour livre standard).
+   - Arcane (200 PC) :
+     * 9 à 15 chapitres.
+     * 10 à 15 "pages" (densité interne) par chapitre.
+     * Longueur moy. mots > 4.3.
+     * Diversité > 40%.
+     * Nom du monde cité >= 6 fois.
+   - Legendary (300 PC) :
+     * > 15 chapitres.
+     * > 15 "pages" par chapitre.
+     * Longueur moy. mots > 5.2.
+     * Diversité > 55%.
+     * Nom du monde cité >= 15 fois.
+
+C. Validation Section (IA / Tutorial)
+   - Longueur Min : 600 caractères.
+   - Richesse Sensorielle : Détection de 3 types de sens min. (Visuel, Auditif, Tactile, Olfactif, Gustatif).
+   - Prompt IA : Injection du "Lore Snapshot" + Contexte narratif canonique.
+
+4. MÉCANISME DE PROGRESSION (POINTS ET RANGS)
+--------------------------------------------------------------------------------
+La progression est irréversible une fois le seuil atteint.
+
+A. Rangs Scribe
+   1. Neophyte (Rank 1)
+      - Points : 0 - 99 PC
+      - Accès : Monde Tutoriel uniquement. Pas d'accès au Chatbot.
+   
+   2. Journeyman (Rank 2)
+      - Points : 100 - 999 PC
+      - Condition : Avoir > 100 PC.
+      - Accès : Grand Archives, Chatbot Oracle, Création de mondes.
+   
+   3. Elder (Rank 3)
+      - Points : >= 1000 PC
+      - Prestige maximum.
+
+B. Gain de Points (PC)
+   - Publication Livre 'Commoner' : +100 PC
+   - Publication Livre 'Arcane' : +200 PC
+   - Publication Livre 'Legendary' : +300 PC
+   - Scholar Trial (Lecture) : +20 PC (Une fois, après lecture de 2 Commoner, 2 Arcane, 2 Legendary).
+   - Pénalité 'Unworthy' : -50 PC.
+   - Bonus 'Vision Globale' (BookValidator) : +25 PC (Cohérence > 85%).
+
+5. INTÉGRATION API OLLAMA (CHATBOT)
+--------------------------------------------------------------------------------
+Le chatbot "Oracle of the Grand Archives" tourne sur un service Python dédié.
+
+A. Configuration Endpoint
+   - URL : http://127.0.0.1:8002/chat
+   - Méthode : POST
+   - Headers : Content-Type: application/json
+
+B. Structure Payload (Requête)
+   {
+     "question": "String (3-800 chars) - La question de l'utilisateur",
+     "worlds": [
+       {
+         "id": Integer,
+         "name": "String",
+         "description": "String",
+         "creator": "String",
+         "genre": "String",
+         "setting": "String",
+         "visibility": "String",
+         "location": "String",
+         "location_label": "String",
+         "books": ["Titre Livre 1", "Titre Livre 2"]
+       }
+     ],
+     "knowledge": [
+       {
+         "kind": "String", // ex: 'world_lore', 'book_content'
+         "title": "String",
+         "content": "String",
+         "world": "String",
+         "author": "String",
+         "location": "String",
+         "location_label": "String"
+       }
+     ]
+   }
+
+C. Structure Réponse
+   {
+     "answer": "String - La réponse générée par l'IA",
+     "sources": [
+       {
+         "kind": "String",
+         "title": "String",
+         "world": "String",
+         "author": "String",
+         "location": "String",
+         "location_label": "String"
+       }
+     ]
+   }
+
+D. Gestion d'Erreur
+   - Timeout recommandé : 30-60 secondes (génération LLM).
+   - Codes HTTP :
+     * 200 : Succès.
+     * 422 : Validation Error (Payload invalide).
+     * 500 : Erreur interne (Ollama down).
+   - Retry : Non implémenté côté serveur, à gérer côté client (max 3 tentatives).

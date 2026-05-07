@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Priority?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns:fx="http://javafx.com/fxml" fx:controller="tn.esprit.controllers.WalletController" spacing="18" styleClass="profile-panel" maxWidth="980">
+    <HBox alignment="CENTER_LEFT" spacing="18">
+        <VBox spacing="6">
+            <Label fx:id="walletHeadline" text="Wallet" styleClass="profile-title" />
+            <Label fx:id="walletSummary" text="Manage the user's wallets." styleClass="profile-subtitle" />
+        </VBox>
+        <Region HBox.hgrow="ALWAYS" />
+        <Button text="Back to Profile" onAction="#onBackToProfile" />
+    </HBox>
+
+    <HBox spacing="12" alignment="CENTER_LEFT">
+        <TextField fx:id="searchField" promptText="Recherche par id, statut, devise, solde..." HBox.hgrow="ALWAYS" />
+        <ComboBox fx:id="sortComboBox" prefWidth="220" promptText="Trier par" />
+        <Button text="Export PDF" onAction="#onExportPdf" />
+        <Button text="Export Excel" onAction="#onExportExcel" />
+    </HBox>
+
+    <TableView fx:id="walletTable" prefHeight="280" styleClass="wallet-table">
+        <columns>
+            <TableColumn fx:id="idColumn" text="ID" prefWidth="70" />
+            <TableColumn fx:id="updatedAtColumn" text="Updated At" prefWidth="180" />
+            <TableColumn fx:id="balanceColumn" text="Solde" prefWidth="110" />
+            <TableColumn fx:id="statusColumn" text="Statut" prefWidth="120" />
+            <TableColumn fx:id="currencyColumn" text="Devise" prefWidth="100" />
+            <TableColumn fx:id="ceilingColumn" text="Plafond" prefWidth="120" />
+        </columns>
+    </TableView>
+
+    <GridPane hgap="16" vgap="14" styleClass="profile-form">
+        <columnConstraints>
+            <ColumnConstraints percentWidth="50" hgrow="ALWAYS" />
+            <ColumnConstraints percentWidth="50" hgrow="ALWAYS" />
+        </columnConstraints>
+
+        <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="0">
+            <Label text="Solde" styleClass="login-field-label" />
+            <TextField fx:id="balanceField" promptText="0.00" />
+        </VBox>
+
+        <VBox spacing="6" GridPane.columnIndex="1" GridPane.rowIndex="0">
+            <Label text="Statut" styleClass="login-field-label" />
+            <TextField fx:id="statusField" promptText="actif" />
+        </VBox>
+
+        <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="1">
+            <Label text="Devise" styleClass="login-field-label" />
+            <TextField fx:id="currencyField" promptText="TND" />
+        </VBox>
+
+        <VBox spacing="6" GridPane.columnIndex="1" GridPane.rowIndex="1">
+            <Label text="Plafond" styleClass="login-field-label" />
+            <TextField fx:id="ceilingField" promptText="10000" />
+        </VBox>
+    </GridPane>
+
+    <HBox spacing="12">
+        <Button text="Create" onAction="#onCreateWallet" styleClass="login-button" />
+        <Button text="Update" onAction="#onUpdateWallet" />
+        <Button text="Delete" onAction="#onDeleteWallet" />
+        <Button text="Refresh" onAction="#onRefreshWallets" />
+        <Region HBox.hgrow="ALWAYS" />
+        <Button text="Clear" onAction="#onClearWalletForm" />
+    </HBox>
+
+    <Label fx:id="walletMessage" text="" wrapText="true" />
+
+    <padding>
+        <Insets top="28" right="28" bottom="28" left="28" />
+    </padding>
+</VBox>

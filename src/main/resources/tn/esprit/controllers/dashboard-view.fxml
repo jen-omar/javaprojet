@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.geometry.Pos?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="tn.esprit.controllers.DashboardController" styleClass="app-root">
+    <left>
+        <VBox prefWidth="250" minWidth="250" maxWidth="250" BorderPane.alignment="CENTER" styleClass="sidebar">
+            <HBox spacing="10" alignment="CENTER_LEFT" styleClass="sidebar-brand">
+                <Label text="MYTHORIA" styleClass="sidebar-logo" />
+            </HBox>
+
+            <VBox spacing="6" styleClass="sidebar-nav">
+                <Button fx:id="navHome" text="HOME" onAction="#onNavigate" userData="HOME" styleClass="nav-button nav-active" maxWidth="1.7976931348623157E308">
+                    <graphic>
+                        <Label text="H" styleClass="nav-icon" />
+                    </graphic>
+                </Button>
+                <Button fx:id="navWorlds" text="WORLDS" onAction="#onNavigate" userData="WORLDS" styleClass="nav-button" maxWidth="1.7976931348623157E308">
+                    <graphic>
+                        <Label text="W" styleClass="nav-icon" />
+                    </graphic>
+                </Button>
+                <Button fx:id="navKinship" text="KINSHIP" onAction="#onNavigate" userData="KINSHIP" styleClass="nav-button" maxWidth="1.7976931348623157E308">
+                    <graphic>
+                        <Label text="K" styleClass="nav-icon" />
+                    </graphic>
+                </Button>
+                <Button fx:id="navBazaar" text="THE BAZAAR" onAction="#onNavigate" userData="BAZAAR" styleClass="nav-button" maxWidth="1.7976931348623157E308">
+                    <graphic>
+                        <Label text="🛒" styleClass="nav-icon" />
+                    </graphic>
+                </Button>
+                <Button fx:id="navProfile" text="PROFILE" onAction="#onNavigate" userData="PROFILE" styleClass="nav-button" maxWidth="1.7976931348623157E308">
+                    <graphic>
+                        <Label text="P" styleClass="nav-icon" />
+                    </graphic>
+                </Button>
+                <Button fx:id="navAdmin" text="ADMIN" onAction="#onNavigate" userData="ADMIN" styleClass="nav-button" maxWidth="1.7976931348623157E308" visible="false" managed="false">
+                    <graphic>
+                        <Label text="M" styleClass="nav-icon" />
+                    </graphic>
+                </Button>
+            </VBox>
+
+            <Region VBox.vgrow="ALWAYS" />
+
+            <VBox spacing="6" styleClass="sidebar-footer">
+                <Label fx:id="rankLabel" text="Rank: Journeyman" styleClass="footer-text" />
+                <Label fx:id="pcLabel" text="100 PC" styleClass="footer-text" />
+                <Button fx:id="logoutButton" text="Se deconnecter" onAction="#onLogout" maxWidth="1.7976931348623157E308" />
+            </VBox>
+
+            <padding>
+                <Insets top="18" right="14" bottom="18" left="14" />
+            </padding>
+        </VBox>
+    </left>
+
+    <center>
+        <StackPane fx:id="contentStack" BorderPane.alignment="CENTER">
+            <StackPane fx:id="profileHost" visible="false" managed="false">
+                <padding>
+                    <Insets top="26" right="26" bottom="26" left="26" />
+                </padding>
+            </StackPane>
+
+            <StackPane fx:id="adminHost" visible="false" managed="false">
+                <padding>
+                    <Insets top="26" right="26" bottom="26" left="26" />
+                </padding>
+            </StackPane>
+
+            <StackPane fx:id="kinshipHost" visible="false" managed="false">
+                <padding>
+                    <Insets top="0" right="0" bottom="0" left="0" />
+                </padding>
+            </StackPane>
+        </StackPane>
+    </center>
+</BorderPane>
