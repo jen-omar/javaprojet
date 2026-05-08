@@ -50,6 +50,12 @@ public class DashboardController {
     private Button navWorlds;
 
     @FXML
+    private Button navVenues;
+
+    @FXML
+    private Button navHappenings;
+
+    @FXML
     private Button navKinship;
 
     @FXML
@@ -77,6 +83,8 @@ public class DashboardController {
     private User currentUser;
     private Node marketplaceView;
     private Node homeView;
+    private Node venuesView;
+    private Node happeningsView;
 
     @FXML
     public void initialize() {
@@ -120,6 +128,14 @@ public class DashboardController {
                         "Cet espace est pret pour tes futurs mondes.",
                         "Interface vide pour le moment, avec le meme design que le dashboard."
                 );
+            }
+            case "VENUES" -> {
+                setActiveNav(navVenues);
+                showVenues();
+            }
+            case "HAPPENINGS" -> {
+                setActiveNav(navHappenings);
+                showHappenings();
             }
             case "KINSHIP" -> {
                 setActiveNav(navKinship);
@@ -201,6 +217,7 @@ public class DashboardController {
             marketplaceView.setVisible(false);
             marketplaceView.setManaged(false);
         }
+        hideMergedFeatureViews();
 
         if (homeView == null) {
             javafx.scene.layout.VBox box = new javafx.scene.layout.VBox(20);
@@ -268,6 +285,7 @@ public class DashboardController {
             marketplaceView.setVisible(false);
             marketplaceView.setManaged(false);
         }
+        hideMergedFeatureViews();
         profileHost.setVisible(true);
         profileHost.setManaged(true);
         if (profileController != null) {
@@ -299,6 +317,7 @@ public class DashboardController {
             marketplaceView.setVisible(false);
             marketplaceView.setManaged(false);
         }
+        hideMergedFeatureViews();
         if (adminController != null) {
             adminController.setCurrentUser(currentUser);
         }
@@ -322,6 +341,7 @@ public class DashboardController {
             marketplaceView.setVisible(false);
             marketplaceView.setManaged(false);
         }
+        hideMergedFeatureViews();
     }
 
     private void showPlaceholder(String title, String subtitle, String note) {
@@ -341,6 +361,7 @@ public class DashboardController {
             marketplaceView.setVisible(false);
             marketplaceView.setManaged(false);
         }
+        hideMergedFeatureViews();
         if (homeView != null) {
             homeView.setVisible(false);
             homeView.setManaged(false);
@@ -396,6 +417,7 @@ public class DashboardController {
             homeView.setVisible(false);
             homeView.setManaged(false);
         }
+        hideMergedFeatureViews();
         
         if (marketplaceView == null) {
             com.marketplace.MainApp marketplaceApp = new com.marketplace.MainApp();
@@ -407,6 +429,67 @@ public class DashboardController {
         }
         marketplaceView.setVisible(true);
         marketplaceView.setManaged(true);
+    }
+
+    private void showVenues() {
+        hideDashboardViews();
+        if (venuesView == null) {
+            venuesView = loadMergedFeature("/tn/esprit/mythoria/GestionLocal.fxml", "GestionLocal.fxml");
+            contentStack.getChildren().add(venuesView);
+        }
+        venuesView.setVisible(true);
+        venuesView.setManaged(true);
+    }
+
+    private void showHappenings() {
+        hideDashboardViews();
+        if (happeningsView == null) {
+            happeningsView = loadMergedFeature("/tn/esprit/mythoria/GestionLocalEvent.fxml", "GestionLocalEvent.fxml");
+            contentStack.getChildren().add(happeningsView);
+        }
+        happeningsView.setVisible(true);
+        happeningsView.setManaged(true);
+    }
+
+    private Node loadMergedFeature(String resourcePath, String viewName) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(resourcePath));
+            return loader.load();
+        } catch (IOException ex) {
+            throw new IllegalStateException("Failed to load " + viewName, ex);
+        }
+    }
+
+    private void hideDashboardViews() {
+        hidePlaceholder();
+        if (homeView != null) {
+            homeView.setVisible(false);
+            homeView.setManaged(false);
+        }
+        profileHost.setVisible(false);
+        profileHost.setManaged(false);
+        adminHost.setVisible(false);
+        adminHost.setManaged(false);
+        if (kinshipHost != null) {
+            kinshipHost.setVisible(false);
+            kinshipHost.setManaged(false);
+        }
+        if (marketplaceView != null) {
+            marketplaceView.setVisible(false);
+            marketplaceView.setManaged(false);
+        }
+        hideMergedFeatureViews();
+    }
+
+    private void hideMergedFeatureViews() {
+        if (venuesView != null) {
+            venuesView.setVisible(false);
+            venuesView.setManaged(false);
+        }
+        if (happeningsView != null) {
+            happeningsView.setVisible(false);
+            happeningsView.setManaged(false);
+        }
     }
 
     private void setActiveNav(Button button) {

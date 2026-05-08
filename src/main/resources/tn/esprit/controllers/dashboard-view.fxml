@@ -28,6 +28,16 @@
                         <Label text="W" styleClass="nav-icon" />
                     </graphic>
                 </Button>
+                <Button fx:id="navVenues" text="VENUES" onAction="#onNavigate" userData="VENUES" styleClass="nav-button" maxWidth="1.7976931348623157E308">
+                    <graphic>
+                        <Label text="V" styleClass="nav-icon" />
+                    </graphic>
+                </Button>
+                <Button fx:id="navHappenings" text="HAPPENINGS" onAction="#onNavigate" userData="HAPPENINGS" styleClass="nav-button" maxWidth="1.7976931348623157E308">
+                    <graphic>
+                        <Label text="E" styleClass="nav-icon" />
+                    </graphic>
+                </Button>
                 <Button fx:id="navKinship" text="KINSHIP" onAction="#onNavigate" userData="KINSHIP" styleClass="nav-button" maxWidth="1.7976931348623157E308">
                     <graphic>
                         <Label text="K" styleClass="nav-icon" />

@@ -86,6 +86,12 @@
             <version>2.10.1</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.18.6</version>
+        </dependency>
+
         <!-- Removed duplicate mysql-connector-j -->
 
         <!-- PDF Generation -->
