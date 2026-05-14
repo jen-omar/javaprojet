@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.String?>
+<?import javafx.collections.FXCollections?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Text?>
+
+<StackPane xmlns="http://javafx.com/javafx/17"
+           xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="tn.esprit.controllers.KinshipController"
+           styleClass="kinship-root">
+
+    <VBox spacing="0" styleClass="kinship-shell">
+        <StackPane>
+            <VBox fx:id="mainDashboardHeader" spacing="14" styleClass="kinship-header">
+                <HBox spacing="12" alignment="CENTER_LEFT">
+                    <VBox spacing="4">
+                        <Label text="Kinship" styleClass="kinship-title" />
+                        <Label text="Commission requests, proposals, and accepted collaborations." styleClass="kinship-subtitle" />
+                    </VBox>
+                    <Region HBox.hgrow="ALWAYS" />
+                    <Button text="Refresh" onAction="#onRefresh" styleClass="kinship-secondary-button" />
+                    <Button text="Export PDF" onAction="#onGenerateReport" styleClass="kinship-secondary-button" />
+                    <Button fx:id="btnPostRequest" text="Post Request" onAction="#onOpenPostModal" styleClass="kinship-primary-button" />
+                </HBox>
+            </VBox>
+
+            <VBox fx:id="briefDetailHeader" spacing="12" styleClass="kinship-header" visible="false" managed="false">
+                <HBox spacing="12" alignment="CENTER_LEFT">
+                    <Button text="Back" onAction="#onCloseProposals" styleClass="kinship-secondary-button" />
+                    <VBox spacing="4">
+                        <Label fx:id="detailBriefTitle" text="Quest Title" styleClass="kinship-title" />
+                        <HBox spacing="14" alignment="CENTER_LEFT">
+                            <Label fx:id="detailBriefAuthor" text="Posted by ..." styleClass="kinship-meta" />
+                            <Label fx:id="detailBriefBudget" text="Budget ..." styleClass="kinship-meta" />
+                            <Label fx:id="detailBriefDeadline" text="Deadline ..." styleClass="kinship-meta" />
+                            <Label fx:id="detailBriefStatus" text="OPEN" styleClass="kinship-status" />
+                        </HBox>
+                    </VBox>
+                    <Region HBox.hgrow="ALWAYS" />
+                    <Button text="Export Brief" onAction="#onGenerateReport" styleClass="kinship-secondary-button" />
+                </HBox>
+            </VBox>
+        </StackPane>
+
+        <HBox spacing="12" alignment="CENTER_LEFT" styleClass="kinship-toolbar">
+            <TextField fx:id="searchField" promptText="Search quests, artists, or proposals" prefWidth="360" styleClass="text-field" />
+            <Region HBox.hgrow="ALWAYS" />
+            <Label text="Sort" styleClass="kinship-toolbar-label" />
+            <ComboBox fx:id="sortCombo" prefWidth="180" styleClass="kinship-combo">
+                <items>
+                    <FXCollections fx:factory="observableArrayList">
+                        <String fx:value="Newest First" />
+                        <String fx:value="Budget (High to Low)" />
+                        <String fx:value="Budget (Low to High)" />
+                        <String fx:value="Deadline (Urgent)" />
+                    </FXCollections>
+                </items>
+            </ComboBox>
+        </HBox>
+
+        <StackPane VBox.vgrow="ALWAYS">
+            <ScrollPane fx:id="mainDashboardContent" fitToWidth="true" pannable="true" styleClass="kinship-scroll">
+                <VBox spacing="18" styleClass="kinship-content">
+                    <Label text="Active Quests" styleClass="kinship-section-title" />
+                    <FlowPane fx:id="briefCardsContainer" hgap="18" vgap="18" styleClass="kinship-card-grid" />
+                </VBox>
+            </ScrollPane>
+
+            <ScrollPane fx:id="briefDetailContent" visible="false" managed="false" fitToWidth="true" pannable="true" styleClass="kinship-scroll">
+                <VBox spacing="20" styleClass="kinship-content">
+                    <VBox spacing="10" styleClass="kinship-detail-panel">
+                        <Label text="Quest Description" styleClass="kinship-section-title" />
+                        <Text fx:id="detailBriefDesc" wrappingWidth="860" styleClass="kinship-detail-text" />
+                    </VBox>
+                    <Separator />
+                    <VBox spacing="14">
+                        <HBox alignment="CENTER_LEFT" spacing="12">
+                            <Label text="Received Proposals" styleClass="kinship-section-title" />
+                            <Region HBox.hgrow="ALWAYS" />
+                            <Button fx:id="btnForgeProposalDetail" text="Forge Proposal" onAction="#onForgeProposalInDetail" styleClass="kinship-primary-button" visible="false" />
+                        </HBox>
+                        <FlowPane fx:id="proposalCardsContainer" hgap="18" vgap="18" styleClass="kinship-card-grid" />
+                    </VBox>
+                </VBox>
+            </ScrollPane>
+        </StackPane>
+    </VBox>
+
+    <StackPane fx:id="briefModalOverlay" visible="false" styleClass="kinship-modal-overlay">
+        <VBox spacing="14" styleClass="kinship-modal" maxWidth="460" maxHeight="460" alignment="CENTER">
+            <HBox alignment="CENTER_RIGHT">
+                <Button text="Close" onAction="#onCloseModal" styleClass="kinship-secondary-button" />
+            </HBox>
+            <Label text="Post Request" styleClass="kinship-modal-title" />
+            <TextField fx:id="titleField" promptText="Quest title" styleClass="text-field" />
+            <TextArea fx:id="descArea" promptText="Describe the collaboration you need" prefRowCount="4" wrapText="true" styleClass="text-area" />
+            <TextField fx:id="budgetField" promptText="Maximum budget" styleClass="text-field" />
+            <DatePicker fx:id="deadlinePicker" promptText="Deadline" maxWidth="Infinity" styleClass="date-picker" />
+            <HBox spacing="10" alignment="CENTER_RIGHT">
+                <Button fx:id="btnSaveBrief" text="Save Request" onAction="#onSaveBrief" styleClass="kinship-primary-button" />
+            </HBox>
+        </VBox>
+    </StackPane>
+
+    <StackPane fx:id="proposalModalOverlay" visible="false" styleClass="kinship-modal-overlay">
+        <VBox spacing="14" styleClass="kinship-modal" maxWidth="460" maxHeight="380" alignment="CENTER">
+            <HBox alignment="CENTER_RIGHT">
+                <Button text="Close" onAction="#onCloseModal" styleClass="kinship-secondary-button" />
+            </HBox>
+            <Label text="Send Proposal" styleClass="kinship-modal-title" />
+            <TextField fx:id="priceField" promptText="Requested price" styleClass="text-field" />
+            <TextField fx:id="daysField" promptText="Days to complete" styleClass="text-field" />
+            <TextArea fx:id="coverArea" promptText="Why should you be chosen?" prefRowCount="4" wrapText="true" styleClass="text-area" />
+            <HBox spacing="10" alignment="CENTER_RIGHT">
+                <Button fx:id="btnSaveProp" text="Send Proposal" onAction="#onSaveProposal" styleClass="kinship-primary-button" />
+            </HBox>
+        </VBox>
+    </StackPane>
+</StackPane>

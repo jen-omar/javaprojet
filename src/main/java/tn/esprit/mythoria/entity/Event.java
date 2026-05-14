@@ -1,12 +1,14 @@
 package tn.esprit.mythoria.entity;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public class Event {
 
     private int id;
     private String title;
     private String description;
+    private String image;
     private LocalDateTime date;
     private String location;
     private LocalDateTime createdAt;
@@ -35,6 +37,13 @@ public class Event {
         this.localId = localId;
     }
 
+    public Event(int id, String title, String description, String image, LocalDateTime date, String location,
+                 LocalDateTime createdAt, int maxTickets, int maxVipTickets,
+                 int maxNormalTickets, int creatorId, int localId) {
+        this(id, title, description, date, location, createdAt, maxTickets, maxVipTickets, maxNormalTickets, creatorId, localId);
+        this.image = image;
+    }
+
     public Event(String title, String description, LocalDateTime date, String location,
                  LocalDateTime createdAt, int maxTickets, int maxVipTickets,
                  int maxNormalTickets, int creatorId, int localId) {
@@ -50,6 +59,13 @@ public class Event {
         this.localId = localId;
     }
 
+    public Event(String title, String description, String image, LocalDateTime date, String location,
+                 LocalDateTime createdAt, int maxTickets, int maxVipTickets,
+                 int maxNormalTickets, int creatorId, int localId) {
+        this(title, description, date, location, createdAt, maxTickets, maxVipTickets, maxNormalTickets, creatorId, localId);
+        this.image = image;
+    }
+
     public int getId() {
         return id;
     }
@@ -57,7 +73,6 @@ public class Event {
     public void setId(int id) {
         this.id = id;
     }
-
 
     public String getTitle() {
         return title;
@@ -67,8 +82,6 @@ public class Event {
         this.title = title;
     }
 
-
-
     public String getDescription() {
         return description;
     }
@@ -77,7 +90,13 @@ public class Event {
         this.description = description;
     }
 
+    public String getImage() {
+        return image;
+    }
 
+    public void setImage(String image) {
+        this.image = image;
+    }
 
     public LocalDateTime getDate() {
         return date;
@@ -87,8 +106,6 @@ public class Event {
         this.date = date;
     }
 
-
-
     public String getLocation() {
         return location;
     }
@@ -96,8 +113,6 @@ public class Event {
     public void setLocation(String location) {
         this.location = location;
     }
-
-
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
@@ -107,8 +122,6 @@ public class Event {
         this.createdAt = createdAt;
     }
 
-
-
     public int getMaxTickets() {
         return maxTickets;
     }
@@ -116,8 +129,6 @@ public class Event {
     public void setMaxTickets(int maxTickets) {
         this.maxTickets = maxTickets;
     }
-
-
 
     public int getMaxVipTickets() {
         return maxVipTickets;
@@ -127,8 +138,6 @@ public class Event {
         this.maxVipTickets = maxVipTickets;
     }
 
-
-
     public int getMaxNormalTickets() {
         return maxNormalTickets;
     }
@@ -137,8 +146,6 @@ public class Event {
         this.maxNormalTickets = maxNormalTickets;
     }
 
-
-
     public int getCreatorId() {
         return creatorId;
     }
@@ -146,8 +153,6 @@ public class Event {
     public void setCreatorId(int creatorId) {
         this.creatorId = creatorId;
     }
-
-
 
     public int getLocalId() {
         return localId;
@@ -159,18 +164,15 @@ public class Event {
 
     @Override
     public String toString() {
-        return "Event{" +
-                "id=" + id +
-                ", title='" + title + '\'' +
-                ", description='" + description + '\'' +
-                ", date=" + date +
-                ", location='" + location + '\'' +
-                ", createdAt=" + createdAt +
-                ", maxTickets=" + maxTickets +
-                ", maxVipTickets=" + maxVipTickets +
-                ", maxNormalTickets=" + maxNormalTickets +
-                ", creatorId=" + creatorId +
-                ", localId=" + localId +
-                '}';
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+        String displayDate = date != null ? date.format(formatter) : "Date N/A";
+        String displayTitle = title != null && !title.isBlank() ? title : "Sans titre";
+        String displayLocation = location != null && !location.isBlank() ? location : "Lieu N/A";
+
+        return displayTitle + " | " +
+                displayDate + " | " +
+                displayLocation + " | " +
+                "Tickets: " + maxTickets +
+                " (VIP: " + maxVipTickets + ", Normal: " + maxNormalTickets + ")";
     }
 }

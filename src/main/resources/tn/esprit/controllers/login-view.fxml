@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<StackPane xmlns:fx="http://javafx.com/fxml"
+           fx:controller="tn.esprit.controllers.LoginController"
+           styleClass="login-root">
+
+    <VBox alignment="CENTER_LEFT" maxWidth="480" spacing="16" styleClass="login-card">
+
+        <Label text="MYTHORIA" styleClass="login-brand" />
+
+        <!-- Tab switcher -->
+        <HBox spacing="10">
+            <Button text="Login" onAction="#onShowLogin" styleClass="login-button" />
+            <Button text="Sign Up" onAction="#onShowSignup" />
+        </HBox>
+
+        <Label fx:id="authTitleLabel" text="Connexion a Mythoria" styleClass="login-title" wrapText="true" />
+        <Label fx:id="authSubtitleLabel" text="Entre avec ton username ou ton email." styleClass="login-subtitle" wrapText="true" />
+
+        <!-- ══ LOGIN PANE ══ -->
+        <VBox fx:id="loginPane" spacing="14">
+
+            <VBox spacing="6">
+                <Label text="Identifiant" styleClass="login-field-label" />
+                <TextField fx:id="usernameField" promptText="Username ou email" />
+            </VBox>
+
+            <VBox spacing="6">
+                <Label text="Mot de passe" styleClass="login-field-label" />
+                <PasswordField fx:id="passwordField" promptText="Mot de passe" onAction="#onLogin" />
+            </VBox>
+
+            <Button text="Se connecter" onAction="#onLogin" styleClass="login-button" maxWidth="Infinity" />
+
+        </VBox>
+
+        <!-- ══ SIGNUP PANE ══ -->
+        <VBox fx:id="signupPane" spacing="14" visible="false" managed="false">
+
+            <VBox spacing="6">
+                <Label text="Username" styleClass="login-field-label" />
+                <TextField fx:id="signupUsernameField" promptText="Choisis un username" />
+            </VBox>
+
+            <VBox spacing="6">
+                <Label text="Email" styleClass="login-field-label" />
+                <TextField fx:id="signupEmailField" promptText="ton@email.com" />
+            </VBox>
+
+            <VBox spacing="6">
+                <Label text="Telephone (optionnel)" styleClass="login-field-label" />
+                <TextField fx:id="signupPhoneField" promptText="+216 XX XXX XXX" />
+            </VBox>
+
+            <VBox spacing="6">
+                <Label text="Prenom (optionnel)" styleClass="login-field-label" />
+                <TextField fx:id="signupFirstNameField" promptText="Prenom" />
+            </VBox>
+
+            <VBox spacing="6">
+                <Label text="Nom (optionnel)" styleClass="login-field-label" />
+                <TextField fx:id="signupLastNameField" promptText="Nom" />
+            </VBox>
+
+            <VBox spacing="6">
+                <Label text="Mot de passe" styleClass="login-field-label" />
+                <PasswordField fx:id="signupPasswordField" promptText="Mot de passe" />
+            </VBox>
+
+            <VBox spacing="6">
+                <Label text="Confirmer le mot de passe" styleClass="login-field-label" />
+                <PasswordField fx:id="signupConfirmPasswordField" promptText="Confirmer" />
+            </VBox>
+
+            <Button text="Creer mon compte" onAction="#onSignup" styleClass="login-button" maxWidth="Infinity" />
+
+        </VBox>
+
+        <!-- Feedback -->
+        <Label fx:id="feedbackLabel" wrapText="true" styleClass="login-feedback" />
+
+    </VBox>
+
+</StackPane>

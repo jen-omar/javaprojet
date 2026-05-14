@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Priority?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns:fx="http://javafx.com/fxml" fx:controller="tn.esprit.controllers.AdminController" spacing="18" styleClass="profile-panel" maxWidth="1100">
+    <HBox alignment="CENTER_LEFT" spacing="18">
+        <VBox spacing="6">
+            <Label fx:id="adminHeadline" text="Admin Console" styleClass="profile-title" />
+            <Label fx:id="adminSummary" text="Manage users and wallets." styleClass="profile-subtitle" />
+        </VBox>
+    </HBox>
+
+    <TabPane tabClosingPolicy="UNAVAILABLE">
+        <tabs>
+            <Tab text="Users">
+                <VBox spacing="16" styleClass="profile-form">
+                    <HBox spacing="12" alignment="CENTER_LEFT">
+                        <TextField fx:id="userSearchField" promptText="Recherche users..." HBox.hgrow="ALWAYS" />
+                        <ComboBox fx:id="userSortComboBox" prefWidth="220" promptText="Trier users" />
+                        <Button text="Users PDF" onAction="#onExportUsersPdf" />
+                        <Button text="Users Excel" onAction="#onExportUsersExcel" />
+                    </HBox>
+
+                    <TableView fx:id="userTable" prefHeight="260">
+                        <columns>
+                            <TableColumn fx:id="userIdColumn" text="ID" prefWidth="70" />
+                            <TableColumn fx:id="userUsernameColumn" text="Username" prefWidth="120" />
+                            <TableColumn fx:id="userEmailColumn" text="Email" prefWidth="180" />
+                            <TableColumn fx:id="userFirstNameColumn" text="Prenom" prefWidth="110" />
+                            <TableColumn fx:id="userLastNameColumn" text="Nom" prefWidth="110" />
+                            <TableColumn fx:id="userPhoneColumn" text="Telephone" prefWidth="130" />
+                            <TableColumn fx:id="userRoleColumn" text="Role" prefWidth="90" />
+                            <TableColumn fx:id="userScoreColumn" text="Score" prefWidth="90" />
+                        </columns>
+                    </TableView>
+
+                    <GridPane hgap="16" vgap="14">
+                        <columnConstraints>
+                            <ColumnConstraints percentWidth="50" hgrow="ALWAYS" />
+                            <ColumnConstraints percentWidth="50" hgrow="ALWAYS" />
+                        </columnConstraints>
+
+                        <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                            <Label text="Email" styleClass="login-field-label" />
+                            <TextField fx:id="adminUserEmailField" />
+                        </VBox>
+                        <VBox spacing="6" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                            <Label text="Telephone" styleClass="login-field-label" />
+                            <TextField fx:id="adminUserPhoneField" />
+                        </VBox>
+                        <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="1">
+                            <Label text="Prenom" styleClass="login-field-label" />
+                            <TextField fx:id="adminUserFirstNameField" />
+                        </VBox>
+                        <VBox spacing="6" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                            <Label text="Nom" styleClass="login-field-label" />
+                            <TextField fx:id="adminUserLastNameField" />
+                        </VBox>
+                        <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="2">
+                            <Label text="Role" styleClass="login-field-label" />
+                            <TextField fx:id="adminUserRoleField" promptText="admin ou user" />
+                        </VBox>
+                        <VBox spacing="6" GridPane.columnIndex="1" GridPane.rowIndex="2">
+                            <Label text="Score" styleClass="login-field-label" />
+                            <TextField fx:id="adminUserScoreField" promptText="0" />
+                        </VBox>
+                    </GridPane>
+
+                    <HBox spacing="12">
+                        <Button text="Modifier User" onAction="#onUpdateUser" styleClass="login-button" />
+                        <Button text="Supprimer User" onAction="#onDeleteUser" />
+                        <Region HBox.hgrow="ALWAYS" />
+                        <Button text="Vider" onAction="#onClearUserForm" />
+                    </HBox>
+                </VBox>
+            </Tab>
+
+            <Tab text="Wallets">
+                <VBox spacing="16" styleClass="profile-form">
+                    <HBox spacing="12" alignment="CENTER_LEFT">
+                        <TextField fx:id="walletSearchField" promptText="Recherche wallets..." HBox.hgrow="ALWAYS" />
+                        <ComboBox fx:id="walletSortComboBox" prefWidth="220" promptText="Trier wallets" />
+                        <Button text="Wallets PDF" onAction="#onExportWalletsPdf" />
+                        <Button text="Wallets Excel" onAction="#onExportWalletsExcel" />
+                    </HBox>
+
+                    <TableView fx:id="adminWalletTable" prefHeight="260">
+                        <columns>
+                            <TableColumn fx:id="adminWalletIdColumn" text="ID" prefWidth="70" />
+                            <TableColumn fx:id="adminWalletUpdatedAtColumn" text="Updated At" prefWidth="170" />
+                            <TableColumn fx:id="adminWalletUserIdColumn" text="User ID" prefWidth="90" />
+                            <TableColumn fx:id="adminWalletBalanceColumn" text="Solde" prefWidth="100" />
+                            <TableColumn fx:id="adminWalletStatusColumn" text="Statut" prefWidth="100" />
+                            <TableColumn fx:id="adminWalletCurrencyColumn" text="Devise" prefWidth="90" />
+                            <TableColumn fx:id="adminWalletCeilingColumn" text="Plafond" prefWidth="100" />
+                        </columns>
+                    </TableView>
+
+                    <GridPane hgap="16" vgap="14">
+                        <columnConstraints>
+                            <ColumnConstraints percentWidth="50" hgrow="ALWAYS" />
+                            <ColumnConstraints percentWidth="50" hgrow="ALWAYS" />
+                        </columnConstraints>
+
+                        <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                            <Label text="User ID" styleClass="login-field-label" />
+                            <TextField fx:id="adminWalletUserIdField" />
+                        </VBox>
+                        <VBox spacing="6" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                            <Label text="Solde" styleClass="login-field-label" />
+                            <TextField fx:id="adminWalletBalanceField" />
+                        </VBox>
+                        <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="1">
+                            <Label text="Statut" styleClass="login-field-label" />
+                            <TextField fx:id="adminWalletStatusField" />
+                        </VBox>
+                        <VBox spacing="6" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                            <Label text="Devise" styleClass="login-field-label" />
+                            <TextField fx:id="adminWalletCurrencyField" />
+                        </VBox>
+                        <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="2">
+                            <Label text="Plafond" styleClass="login-field-label" />
+                            <TextField fx:id="adminWalletCeilingField" />
+                        </VBox>
+                    </GridPane>
+
+                    <HBox spacing="12">
+                        <Button text="Modifier Wallet" onAction="#onUpdateWallet" styleClass="login-button" />
+                        <Button text="Supprimer Wallet" onAction="#onDeleteWallet" />
+                        <Region HBox.hgrow="ALWAYS" />
+                        <Button text="Vider" onAction="#onClearWalletForm" />
+                    </HBox>
+                </VBox>
+            </Tab>
+        </tabs>
+    </TabPane>
+
+    <Label fx:id="adminMessage" text="" wrapText="true" />
+
+    <padding>
+        <Insets top="28" right="28" bottom="28" left="28" />
+    </padding>
+</VBox>
